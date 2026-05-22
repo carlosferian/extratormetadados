@@ -2,7 +2,7 @@ const { google } = require("googleapis");
 const fs = require("fs");
 const path = require("path");
 
-const SCRIPT_ID = "1FdP5QbgBWguo4PTM635JrfX_QueuK7aeDNhXl6u33kll01RhHVxgmASx";
+const SCRIPT_ID = "1dB9_r9R2N3UZAjrYW5UAlKd5I8zl-9hO5H0d3FwFEif-81Urv83WUkQV";
 
 async function deploy() {
   const credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON);
