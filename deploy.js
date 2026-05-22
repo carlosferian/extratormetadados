@@ -19,6 +19,16 @@ async function deploy() {
 
   const files = [
     {
+      name: "Main",
+      type: "SERVER_JS",
+      source: fs.readFileSync(path.join(__dirname, "src/Main.js"), "utf8"),
+    },
+    {
+      name: "Spreadsheet",
+      type: "SERVER_JS",
+      source: fs.readFileSync(path.join(__dirname, "src/Spreadsheet.js"), "utf8"),
+    },
+    {
       name: "Listing",
       type: "SERVER_JS",
       source: fs.readFileSync(path.join(__dirname, "src/Listing.js"), "utf8"),
@@ -27,6 +37,16 @@ async function deploy() {
       name: "Gemini",
       type: "SERVER_JS",
       source: fs.readFileSync(path.join(__dirname, "src/Gemini.js"), "utf8"),
+    },
+    {
+      name: "Export",
+      type: "SERVER_JS",
+      source: fs.readFileSync(path.join(__dirname, "src/Export.js"), "utf8"),
+    },
+    {
+      name: "Interface",
+      type: "HTML",
+      source: fs.readFileSync(path.join(__dirname, "src/Interface.html"), "utf8"),
     },
     {
       name: "appsscript",

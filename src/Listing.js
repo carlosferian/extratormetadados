@@ -1,99 +1,77 @@
-function LISTING() {
+function LISTING(folderId) {
   let rootFolder;
   try {
-    rootFolder = DriveApp.getFileById(SpreadsheetApp.getActiveSpreadsheet().getId()).getParents().next();
+    if (folderId) {
+      rootFolder = DriveApp.getFolderById(folderId);
+    } else {
+      rootFolder = DriveApp.getFileById(SpreadsheetApp.getActiveSpreadsheet().getId()).getParents().next();
+    }
   } catch (e) {
-    Logger.log("Erro ao acessar a pasta raiz: " + e.message);
-    throw new Error("Não foi possível acessar a pasta raiz. Verifique se o script tem permissão.");
+    throw new Error("Não foi possível acessar a pasta. Verifique as permissões: " + e.message);
   }
 
-  let result = [];
-  let folderCount = 0;
-  let documentCount = 0;
-  let processedFileIds = new Set();
+  const sheet = SpreadsheetApp.getActiveSheet();
+  ensureHeaders(sheet);
 
-  result.push([
-    "repositório", "dc.source", "dc.title", "dc.creator", "dc.subject", "dc.subject", "dc.subject",
-    "dc.description", "dc.publisher", "dc.contributor", "dc.date", "dc.format",
-    "dc.identifier", "filename", "dc.language", "dc.relation", "dc.coverage", "dc.rights"
-  ]);
-
-  let sheet = SpreadsheetApp.getActiveSheet();
-  let lastRow = sheet.getLastRow();
-  let existingIds = new Set();
+  const lastRow = sheet.getLastRow();
+  const existingIds = new Set();
 
   if (lastRow > 1) {
-    let idsInSheet = sheet.getRange(2, 13, lastRow - 1, 1).getValues();
-    idsInSheet.forEach(row => existingIds.add(row[0]));
+    sheet.getRange(2, COL.identifier + 1, lastRow - 1, 1).getValues()
+      .forEach(row => existingIds.add(row[0]));
   }
 
-  let lastProcessedFileId = PropertiesService.getScriptProperties().getProperty('lastFileId');
+  const processedFileIds = new Set();
+  let lastProcessedFileId = PropertiesService.getScriptProperties().getProperty("lastFileId");
   let checkpointReached = !lastProcessedFileId;
+  let folderCount = 0;
+  let documentCount = 0;
 
   function listFiles(folder, path) {
-    try {
-      let subfolders = folder.getFolders();
-      while (subfolders.hasNext()) {
-        let subfolder = subfolders.next();
-        let subfolderPath = path + "/" + subfolder.getName();
-        folderCount++;
+    const subfolders = folder.getFolders();
+    while (subfolders.hasNext()) {
+      const subfolder = subfolders.next();
+      const subfolderPath = path + "/" + subfolder.getName();
+      folderCount++;
 
-        let files = subfolder.getFiles();
-        while (files.hasNext()) {
-          let file = files.next();
-          let fileId = file.getId();
+      const files = subfolder.getFiles();
+      while (files.hasNext()) {
+        const file = files.next();
+        const fileId = file.getId();
 
-          if (processedFileIds.has(fileId) || existingIds.has(fileId)) {
-            continue;
-          }
+        if (processedFileIds.has(fileId) || existingIds.has(fileId)) continue;
 
-          if (!checkpointReached) {
-            if (fileId === lastProcessedFileId) {
-              checkpointReached = true;
-            }
-            continue;
-          }
-
-          let fileName = subfolderPath + "/" + file.getName();
-          documentCount++;
-          let creator = file.getOwner() ? file.getOwner().getName() : "Desconhecido";
-          let fileFormat = file.getMimeType().split('/')[1];
-          let fileUrl = file.getUrl();
-
-          result.push([
-            "", fileUrl, "", creator, "", "", "", "", "", "", "", fileFormat,
-            fileId, fileName, "", "", "", ""
-          ]);
-
-          processedFileIds.add(fileId);
-          PropertiesService.getScriptProperties().setProperty('lastFileId', fileId);
-
-          sheet.getRange(sheet.getLastRow() + 1, 1, 1, result[0].length).setValues(result.splice(1, 1));
-          SpreadsheetApp.flush();
-          Utilities.sleep(1000);
+        if (!checkpointReached) {
+          if (fileId === lastProcessedFileId) checkpointReached = true;
+          continue;
         }
 
-        listFiles(subfolder, subfolderPath);
+        const newRow = new Array(REQUIRED_HEADERS.length).fill("");
+        newRow[COL.source]      = file.getUrl();
+        newRow[COL.creator]     = file.getOwner() ? file.getOwner().getName() : "Desconhecido";
+        newRow[COL.format]      = file.getMimeType().split("/")[1];
+        newRow[COL.identifier]  = fileId;
+        newRow[COL.filename]    = subfolderPath + "/" + file.getName();
+
+        sheet.getRange(sheet.getLastRow() + 1, 1, 1, newRow.length).setValues([newRow]);
+        processedFileIds.add(fileId);
+        PropertiesService.getScriptProperties().setProperty("lastFileId", fileId);
+        SpreadsheetApp.flush();
+        documentCount++;
+        Utilities.sleep(500);
       }
-    } catch (e) {
-      Logger.log("Erro ao processar arquivos ou pastas: " + e.message);
-      throw new Error("Erro durante a listagem. Consulte os logs para mais detalhes.");
+
+      listFiles(subfolder, subfolderPath);
     }
   }
 
-  try {
-    listFiles(rootFolder, "");
-    Logger.log("Número de pastas listadas: " + folderCount);
-    Logger.log("Número de documentos listados: " + documentCount);
-    Logger.log("Listagem concluída com sucesso.");
-    throw new Error("Processamento concluído com sucesso.");
-  } catch (e) {
-    Logger.log("Erro geral: " + e.message);
-    throw e;
-  }
+  listFiles(rootFolder, "");
+
+  Logger.log("Pastas: " + folderCount + ", Documentos: " + documentCount);
+  return documentCount + " documento(s) listado(s) em " + folderCount + " pasta(s).";
 }
 
 function resetCheckpoint() {
-  PropertiesService.getScriptProperties().deleteProperty('lastFileId');
+  PropertiesService.getScriptProperties().deleteProperty("lastFileId");
   Logger.log("Checkpoint reiniciado.");
 }
