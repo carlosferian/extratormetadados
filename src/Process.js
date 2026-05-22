@@ -26,7 +26,8 @@ function initProcessing() {
 
     if (title.startsWith('Arquivo ignorado') || title.startsWith('Modelo não suporta')) continue;
 
-    rows.push(i + 2);
+    const filename = (row[COL.filename] || '').toString().trim().split('/').pop() || ('Linha ' + (i + 2));
+    rows.push({ rowNum: i + 2, filename });
   }
 
   const N = rows.length;
@@ -42,6 +43,7 @@ function initProcessing() {
   return {
     done: N === 0,
     message: N === 0 ? '✅ Nada a processar.' : '🤖 ' + N + ' linha(s) para processar.',
+    analyzingNext: N > 0 ? rows[0].filename : null,
     total: N,
     processedCount: 0
   };
@@ -69,12 +71,15 @@ function processingStep(settingsJson) {
     };
   }
 
-  const rowNumber = state.rows.shift();
+  const item = state.rows.shift();
+  const rowNumber = item.rowNum;
   const sheet = SpreadsheetApp.getActiveSheet();
   const rowData = sheet.getRange(rowNumber, 1, 1, REQUIRED_HEADERS.length).getValues()[0];
 
   const fileId = (rowData[COL.identifier] || '').toString().trim();
   const fileName = (rowData[COL.filename] || '').toString().trim();
+  const shortName = item.filename;
+  const analyzingNext = state.rows.length > 0 ? state.rows[0].filename : null;
 
   let file;
   let mimeType;
@@ -87,7 +92,8 @@ function processingStep(settingsJson) {
     cache.put('processingState', JSON.stringify(state), 21600);
     return {
       done: false,
-      message: '⚠ Arquivo não encontrado: ' + fileName,
+      messages: [{ text: '⚠ Arquivo não encontrado: ' + shortName, type: 'warning' }],
+      analyzingNext,
       processedCount: state.processedCount,
       skippedCount: state.skippedCount,
       total: state.totalRows
@@ -109,8 +115,8 @@ function processingStep(settingsJson) {
     cache.put('processingState', JSON.stringify(state), 21600);
     return {
       done: false,
-      warning: true,
-      message: '⚠ Modelo não suporta imagens: ' + fileName,
+      messages: [{ text: '⚠ Modelo não suporta imagens: ' + shortName, type: 'warning' }],
+      analyzingNext,
       processedCount: state.processedCount,
       skippedCount: state.skippedCount,
       total: state.totalRows
@@ -127,7 +133,8 @@ function processingStep(settingsJson) {
     cache.put('processingState', JSON.stringify(state), 21600);
     return {
       done: false,
-      message: '⚠ Erro ao chamar IA para: ' + fileName + ' — ' + e.message,
+      messages: [{ text: '❌ Erro em ' + shortName + ': ' + e.message, type: 'error' }],
+      analyzingNext,
       processedCount: state.processedCount,
       skippedCount: state.skippedCount,
       total: state.totalRows
@@ -139,7 +146,8 @@ function processingStep(settingsJson) {
     cache.put('processingState', JSON.stringify(state), 21600);
     return {
       done: false,
-      message: '⚠ Ignorado (sem resposta): ' + fileName,
+      messages: [{ text: '⏭ Ignorado (arquivo muito grande ou inválido): ' + shortName, type: 'warning' }],
+      analyzingNext,
       processedCount: state.processedCount,
       skippedCount: state.skippedCount,
       total: state.totalRows
@@ -167,11 +175,19 @@ function processingStep(settingsJson) {
 
   cache.put('processingState', JSON.stringify(state), 21600);
 
+  const msgs = list.length === 4
+    ? [
+        { text: '✓ ' + shortName, type: 'success' },
+        { text: '  📌 ' + list[0].trim(), type: 'normal' },
+        { text: '  📅 ' + list[1].trim(), type: 'normal' },
+        { text: '  🏷️ ' + list[2].trim(), type: 'normal' }
+      ]
+    : [{ text: '⚠ Resposta inválida da IA: ' + shortName, type: 'warning' }];
+
   return {
     done: false,
-    message: list.length === 4
-      ? '🤖 Processado: ' + fileName
-      : '⚠ Resposta inválida: ' + fileName,
+    messages: msgs,
+    analyzingNext,
     processedCount: state.processedCount,
     skippedCount: state.skippedCount,
     total: state.totalRows

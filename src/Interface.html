@@ -472,6 +472,7 @@
               addLog(initResult.message, getLogClass(initResult.message));
               if (!initResult.done) {
                 updateProgress(0, initResult.total);
+                if (initResult.analyzingNext) addLog('🔍 Analisando: ' + initResult.analyzingNext + '...', 'info');
                 nextProcessingStep(settings, initResult.total);
               } else {
                 setIdle();
@@ -493,6 +494,7 @@
               addLog(initResult.message, getLogClass(initResult.message));
               if (!initResult.done) {
                 updateProgress(0, initResult.total);
+                if (initResult.analyzingNext) addLog('🔍 Analisando: ' + initResult.analyzingNext + '...', 'info');
                 nextProcessingStep(settings, initResult.total);
               } else {
                 setIdle();
@@ -514,9 +516,18 @@
       var settingsJson = JSON.stringify(settings);
       google.script.run
         .withSuccessHandler(function(result) {
-          addLog(result.message, getLogClass(result.message));
+          // Render all messages from this step
+          var msgs = result.messages || [{ text: result.message || '', type: getLogClass(result.message || '') }];
+          msgs.forEach(function(m) { addLog(m.text, m.type); });
+
+          // Pre-announce next file before the AI call
+          if (!result.done && result.analyzingNext) {
+            addLog('🔍 Analisando: ' + result.analyzingNext + '...', 'info');
+          }
+
           var done = result.processedCount + result.skippedCount;
           updateProgress(done, result.total || total);
+
           if (!result.done) {
             nextProcessingStep(settings, result.total || total);
           } else {
