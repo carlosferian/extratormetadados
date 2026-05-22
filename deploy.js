@@ -5,14 +5,17 @@ const path = require("path");
 const SCRIPT_ID = "1dB9_r9R2N3UZAjrYW5UAlKd5I8zl-9hO5H0d3FwFEif-81Urv83WUkQV";
 
 async function deploy() {
-  const credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON);
+  const oauth2Client = new google.auth.OAuth2(
+    process.env.GOOGLE_CLIENT_ID,
+    process.env.GOOGLE_CLIENT_SECRET,
+    "https://developers.google.com/oauthplayground"
+  );
 
-  const auth = new google.auth.GoogleAuth({
-    credentials,
-    scopes: ["https://www.googleapis.com/auth/script.projects"],
+  oauth2Client.setCredentials({
+    refresh_token: process.env.GOOGLE_REFRESH_TOKEN,
   });
 
-  const script = google.script({ version: "v1", auth });
+  const script = google.script({ version: "v1", auth: oauth2Client });
 
   const files = [
     {
