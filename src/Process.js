@@ -95,7 +95,11 @@ function processingStep(settingsJson) {
   }
 
   const provider = settings.provider || 'gemini';
-  const model = settings.model || settings.geminiModel || settings.openaiModel || settings.openrouterModel || settings.ollamaModel || '';
+  const model = settings.model ||
+    settings.geminiModel ||
+    settings.openaiModel ||
+    settings.openrouterModel ||
+    settings.ollamaModel || '';
   const isImage = mimeType && mimeType.startsWith('image/');
 
   if (isImage && !isMultimodal(provider, model)) {

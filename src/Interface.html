@@ -21,7 +21,7 @@
     .header p  { font-size: 11px; opacity: .8; margin-top: 2px; }
 
     .section {
-      padding: 14px 16px;
+      padding: 12px 16px;
       border-bottom: 1px solid #e0e0e0;
     }
 
@@ -32,10 +32,13 @@
       color: #5f6368;
       text-transform: uppercase;
       letter-spacing: .5px;
-      margin-bottom: 5px;
+      margin-bottom: 4px;
     }
 
-    input[type="url"] {
+    input[type="url"],
+    input[type="text"],
+    input[type="password"],
+    select {
       width: 100%;
       padding: 7px 9px;
       border: 1px solid #dadce0;
@@ -43,14 +46,23 @@
       font-size: 12px;
       outline: none;
       color: #202124;
+      background: #fff;
     }
-    input[type="url"]:focus { border-color: #1a73e8; }
+    input[type="url"]:focus,
+    input[type="text"]:focus,
+    input[type="password"]:focus,
+    select:focus { border-color: #1a73e8; box-shadow: 0 0 0 2px rgba(26,115,232,.15); }
+
+    .field { margin-bottom: 8px; }
+    .field:last-child { margin-bottom: 0; }
 
     .hint {
       font-size: 11px;
       color: #5f6368;
-      margin-top: 5px;
+      margin-top: 4px;
     }
+    .hint a { color: #1a73e8; text-decoration: none; }
+    .hint a:hover { text-decoration: underline; }
 
     .use-current {
       margin-top: 8px;
@@ -62,14 +74,56 @@
       color: #1a73e8;
       cursor: pointer;
       width: 100%;
+      text-align: left;
     }
     .use-current:hover { background: #e8f0fe; }
 
+    /* Accordion */
+    .accordion-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      padding: 12px 16px;
+      border-bottom: 1px solid #e0e0e0;
+      user-select: none;
+      background: #f8f9fa;
+    }
+    .accordion-header:hover { background: #f1f3f4; }
+    .accordion-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: #5f6368;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+    .chevron {
+      font-size: 10px;
+      color: #5f6368;
+      transition: transform .2s;
+    }
+    .chevron.open { transform: rotate(180deg); }
+    .accordion-body {
+      display: none;
+      padding: 12px 16px;
+      border-bottom: 1px solid #e0e0e0;
+    }
+    .accordion-body.open { display: block; }
+
+    .model-hint {
+      font-size: 10px;
+      color: #80868b;
+      margin-top: 4px;
+      line-height: 1.4;
+    }
+
+    /* Actions */
     .actions {
       padding: 12px 16px;
       display: flex;
       flex-direction: column;
       gap: 7px;
+      border-bottom: 1px solid #e0e0e0;
     }
 
     button {
@@ -89,39 +143,64 @@
     .btn-blue   { background: #1a73e8; color: #fff; }
     .btn-grey   { background: #f1f3f4; color: #202124; }
     .btn-green  { background: #34a853; color: #fff; }
-    .btn-reset  { background: #f1f3f4; color: #5f6368; }
-
-    .status-area { padding: 12px 16px; }
-
-    .status {
-      padding: 10px 12px;
-      border-radius: 4px;
-      font-size: 12px;
-      line-height: 1.6;
-      display: none;
-      word-break: break-word;
-    }
-    .status.info    { background: #e8f0fe; color: #1558d6; display: block; }
-    .status.success { background: #e6f4ea; color: #137333; display: block; }
-    .status.error   { background: #fce8e6; color: #c5221f; display: block; }
-
-    .spinner {
-      display: inline-block;
-      width: 11px; height: 11px;
-      border: 2px solid rgba(0,0,0,.15);
-      border-top-color: currentColor;
-      border-radius: 50%;
-      animation: spin .7s linear infinite;
-      margin-right: 5px;
-      vertical-align: middle;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
+    .btn-red    { background: #fff; color: #c5221f; border: 1px solid #c5221f; display: none; }
+    .btn-save   { background: #fff; color: #1a73e8; border: 1px solid #1a73e8; font-size: 11px; padding: 6px 10px; }
+    .btn-save:hover:not(:disabled) { background: #e8f0fe; filter: none; }
 
     .divider {
       border: none;
       border-top: 1px solid #e0e0e0;
       margin: 0;
     }
+
+    /* Progress */
+    .progress-section { padding: 12px 16px; border-bottom: 1px solid #e0e0e0; display: none; }
+    .progress-label { font-size: 10px; color: #5f6368; margin-bottom: 5px; display: flex; justify-content: space-between; }
+    .progress-bar-bg {
+      background: #e0e0e0;
+      border-radius: 4px;
+      height: 6px;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      background: #1a73e8;
+      height: 100%;
+      width: 0%;
+      border-radius: 4px;
+      transition: width .3s ease;
+    }
+
+    /* Log */
+    .log-section { padding: 12px 16px; }
+    .log-label {
+      font-size: 10px;
+      font-weight: 700;
+      color: #5f6368;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      margin-bottom: 6px;
+    }
+    .log-area {
+      background: #f8f9fa;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      padding: 8px;
+      max-height: 200px;
+      overflow-y: auto;
+      font-family: monospace;
+      font-size: 11px;
+      line-height: 1.5;
+    }
+    .log-area:empty::before {
+      content: 'Aguardando ações...';
+      color: #9aa0a6;
+    }
+    .log-entry { margin-bottom: 2px; word-break: break-word; }
+    .log-entry.success { color: #137333; }
+    .log-entry.warning { color: #e37400; }
+    .log-entry.error   { color: #c5221f; }
+    .log-entry.info    { color: #1558d6; }
+    .log-entry.normal  { color: #202124; }
   </style>
 </head>
 <body>
@@ -131,99 +210,420 @@
     <p>TRE-PR &mdash; Archivematica</p>
   </div>
 
+  <!-- Planilha -->
   <div class="section">
     <label>Planilha de referência</label>
-    <input type="url" id="spreadsheetUrl"
-           placeholder="https://docs.google.com/spreadsheets/d/...">
+    <input type="url" id="spreadsheetUrl" placeholder="https://docs.google.com/spreadsheets/d/...">
     <p class="hint">A pasta que contém esta planilha será escaneada.</p>
-    <button class="use-current" onclick="useCurrentSheet()">
-      ↩ Usar esta planilha
-    </button>
+    <button class="use-current" onclick="useCurrentSheet()">&#8592; Usar esta planilha</button>
   </div>
 
+  <!-- Configurações (accordion) -->
+  <div class="accordion-header" onclick="toggleAccordion()">
+    <span class="accordion-title">&#9881; Configurações</span>
+    <span class="chevron" id="chevron">&#9660;</span>
+  </div>
+  <div class="accordion-body" id="accordionBody">
+    <div class="field">
+      <label>Provedor de IA</label>
+      <select id="provider" onchange="updateProviderUI()">
+        <option value="gemini">Gemini (Google)</option>
+        <option value="openai">OpenAI (ChatGPT)</option>
+        <option value="openrouter">OpenRouter</option>
+        <option value="ollama">Ollama (local)</option>
+      </select>
+    </div>
+
+    <div class="field" id="fieldApiKey">
+      <label id="labelApiKey">API Key</label>
+      <input type="password" id="apiKey" placeholder="Cole sua API key aqui">
+    </div>
+
+    <div class="field" id="fieldOllamaUrl" style="display:none">
+      <label>URL do Ollama</label>
+      <input type="text" id="ollamaUrl" placeholder="http://localhost:11434">
+    </div>
+
+    <div class="field">
+      <label>Modelo</label>
+      <input type="text" id="model" placeholder="Ex: gemini-2.0-flash">
+      <div class="model-hint" id="modelHint"></div>
+    </div>
+
+    <button class="btn-save" onclick="saveSettingsUI()">Salvar configurações</button>
+  </div>
+
+  <!-- Ações -->
   <div class="actions">
-    <button class="btn-blue" onclick="startListing()">
-      📁&nbsp; Listar documentos
-    </button>
-    <button class="btn-grey" onclick="startDescription()">
-      🤖&nbsp; Descrever com IA
-    </button>
+    <button class="btn-blue" id="btnList" onclick="startListing()">&#128193;&nbsp; Listar documentos</button>
+    <button class="btn-grey" id="btnDescribe" onclick="startDescription()">&#129302;&nbsp; Descrever com IA</button>
     <hr class="divider">
-    <button class="btn-green" onclick="exportCsv()">
-      📥&nbsp; Exportar CSV (Archivematica)
-    </button>
-    <button class="btn-reset" onclick="resetCheckpointUI()">
-      🔄&nbsp; Reiniciar checkpoint
-    </button>
+    <button class="btn-green" id="btnExport" onclick="exportCsv()">&#128229;&nbsp; Exportar CSV (Archivematica)</button>
+    <button class="btn-red" id="btnCancel" onclick="cancelAction()">&#10005; Cancelar</button>
   </div>
 
-  <div class="status-area">
-    <div id="status" class="status"></div>
+  <!-- Progresso -->
+  <div class="progress-section" id="progressSection">
+    <div class="progress-label">
+      <span id="progressText">Processando...</span>
+      <span id="progressCount"></span>
+    </div>
+    <div class="progress-bar-bg">
+      <div class="progress-bar-fill" id="progressFill"></div>
+    </div>
+  </div>
+
+  <!-- Log -->
+  <div class="log-section">
+    <div class="log-label">Log</div>
+    <div class="log-area" id="logArea"></div>
   </div>
 
   <script>
-    function setStatus(msg, type) {
-      const el = document.getElementById("status");
-      el.className = "status " + type;
-      el.innerHTML = msg;
+    var appState = 'idle';
+
+    var MODEL_HINTS = {
+      gemini: 'Multimodal: todos os modelos Gemini suportam imagens.<br>Ex: gemini-2.0-flash, gemini-1.5-pro',
+      openai: 'Multimodal: gpt-4o, gpt-4o-mini, gpt-4-turbo, gpt-4-vision-preview.<br>Texto: gpt-3.5-turbo',
+      openrouter: 'Multimodal: modelos com "vision", "claude-3", "gpt-4o", "gemini", "llava".<br>Ex: google/gemini-flash-1.5, anthropic/claude-3-haiku',
+      ollama: 'Multimodal: llava, bakllava, moondream, cogvlm.<br>Ex: llava, llava:13b, moondream'
+    };
+
+    function toggleAccordion() {
+      var body = document.getElementById('accordionBody');
+      var chevron = document.getElementById('chevron');
+      var open = body.classList.toggle('open');
+      if (open) {
+        chevron.classList.add('open');
+      } else {
+        chevron.classList.remove('open');
+      }
     }
 
-    function setBusy(msg) {
-      setStatus('<span class="spinner"></span>' + msg, "info");
-      document.querySelectorAll("button").forEach(b => b.disabled = true);
+    function updateProviderUI() {
+      var provider = document.getElementById('provider').value;
+      var fieldApiKey = document.getElementById('fieldApiKey');
+      var fieldOllamaUrl = document.getElementById('fieldOllamaUrl');
+      var labelApiKey = document.getElementById('labelApiKey');
+      var modelHint = document.getElementById('modelHint');
+
+      if (provider === 'ollama') {
+        fieldApiKey.style.display = 'none';
+        fieldOllamaUrl.style.display = 'block';
+      } else {
+        fieldApiKey.style.display = 'block';
+        fieldOllamaUrl.style.display = 'none';
+      }
+
+      if (provider === 'gemini') labelApiKey.textContent = 'Gemini API Key';
+      else if (provider === 'openai') labelApiKey.textContent = 'OpenAI API Key';
+      else if (provider === 'openrouter') labelApiKey.textContent = 'OpenRouter API Key';
+
+      modelHint.innerHTML = MODEL_HINTS[provider] || '';
     }
 
-    function setIdle() {
-      document.querySelectorAll("button").forEach(b => b.disabled = false);
+    function loadSettings() {
+      google.script.run
+        .withSuccessHandler(function(s) {
+          document.getElementById('provider').value = s.provider || 'gemini';
+          document.getElementById('ollamaUrl').value = s.ollamaUrl || 'http://localhost:11434';
+
+          var provider = s.provider || 'gemini';
+          if (provider === 'gemini') {
+            document.getElementById('apiKey').value = s.geminiApiKey || '';
+            document.getElementById('model').value = s.geminiModel || 'gemini-2.0-flash';
+          } else if (provider === 'openai') {
+            document.getElementById('apiKey').value = s.openaiApiKey || '';
+            document.getElementById('model').value = s.openaiModel || 'gpt-4o';
+          } else if (provider === 'openrouter') {
+            document.getElementById('apiKey').value = s.openrouterApiKey || '';
+            document.getElementById('model').value = s.openrouterModel || 'google/gemini-flash-1.5';
+          } else if (provider === 'ollama') {
+            document.getElementById('model').value = s.ollamaModel || 'llava';
+          }
+          updateProviderUI();
+        })
+        .withFailureHandler(function(err) {
+          addLog('⚠ Erro ao carregar configurações: ' + err.message, 'warning');
+        })
+        .getSettings();
+    }
+
+    function saveSettingsUI() {
+      var settings = collectSettings();
+      google.script.run
+        .withSuccessHandler(function(msg) {
+          addLog('✅ ' + msg, 'success');
+        })
+        .withFailureHandler(function(err) {
+          addLog('❌ Erro ao salvar: ' + err.message, 'error');
+        })
+        .saveSettings(settings);
+    }
+
+    function collectSettings() {
+      var provider = document.getElementById('provider').value;
+      var apiKey = document.getElementById('apiKey').value.trim();
+      var model = document.getElementById('model').value.trim();
+      var ollamaUrl = document.getElementById('ollamaUrl').value.trim();
+
+      return {
+        provider: provider,
+        geminiApiKey:     provider === 'gemini'      ? apiKey : '',
+        geminiModel:      provider === 'gemini'      ? model  : 'gemini-2.0-flash',
+        openaiApiKey:     provider === 'openai'      ? apiKey : '',
+        openaiModel:      provider === 'openai'      ? model  : 'gpt-4o',
+        openrouterApiKey: provider === 'openrouter'  ? apiKey : '',
+        openrouterModel:  provider === 'openrouter'  ? model  : 'google/gemini-flash-1.5',
+        ollamaUrl:        ollamaUrl || 'http://localhost:11434',
+        ollamaModel:      provider === 'ollama'      ? model  : 'llava'
+      };
+    }
+
+    function getActiveSettings() {
+      var settings = collectSettings();
+      var provider = settings.provider;
+      if (provider === 'gemini') settings.model = settings.geminiModel;
+      else if (provider === 'openai') settings.model = settings.openaiModel;
+      else if (provider === 'openrouter') settings.model = settings.openrouterModel;
+      else if (provider === 'ollama') settings.model = settings.ollamaModel;
+      return settings;
     }
 
     function useCurrentSheet() {
       google.script.run
-        .withSuccessHandler(url => {
-          document.getElementById("spreadsheetUrl").value = url;
+        .withSuccessHandler(function(url) {
+          document.getElementById('spreadsheetUrl').value = url;
         })
-        .withFailureHandler(err => setStatus("❌ " + err.message, "error"))
+        .withFailureHandler(function(err) {
+          addLog('❌ ' + err.message, 'error');
+        })
         .getCurrentSpreadsheetUrl();
     }
 
     function startListing() {
-      const url = document.getElementById("spreadsheetUrl").value.trim();
-      if (!url) { setStatus("Cole o link de uma planilha do Google.", "error"); return; }
-      setBusy("Listando documentos...");
+      var url = document.getElementById('spreadsheetUrl').value.trim();
+      if (!url) {
+        addLog('❌ Cole o link de uma planilha do Google.', 'error');
+        return;
+      }
+      appState = 'listing';
+      setBusy('listing');
+      addLog('📂 Iniciando listagem...', 'info');
+
       google.script.run
-        .withSuccessHandler(result => { setIdle(); setStatus("✅ " + result, "success"); })
-        .withFailureHandler(err  => { setIdle(); setStatus("❌ " + err.message, "error"); })
-        .runListing(url);
+        .withSuccessHandler(function(result) {
+          addLog(result.message, getLogClass(result.message));
+          if (!result.done) {
+            nextListingStep();
+          } else {
+            setIdle();
+            appState = 'idle';
+          }
+        })
+        .withFailureHandler(function(err) {
+          addLog('❌ ' + err.message, 'error');
+          setIdle();
+          appState = 'idle';
+        })
+        .startListingSession(url);
+    }
+
+    function nextListingStep() {
+      if (appState !== 'listing') return;
+      google.script.run
+        .withSuccessHandler(function(result) {
+          addLog(result.message, getLogClass(result.message));
+          if (!result.done) {
+            nextListingStep();
+          } else {
+            setIdle();
+            appState = 'idle';
+          }
+        })
+        .withFailureHandler(function(err) {
+          addLog('❌ ' + err.message, 'error');
+          setIdle();
+          appState = 'idle';
+        })
+        .listingStep();
     }
 
     function startDescription() {
-      setBusy("Descrevendo com IA — isso pode levar alguns minutos...");
+      var settings = getActiveSettings();
+      appState = 'processing';
+      setBusy('processing');
+      addLog('🤖 Verificando planilha...', 'info');
+
       google.script.run
-        .withSuccessHandler(result => { setIdle(); setStatus("✅ " + result, "success"); })
-        .withFailureHandler(err  => { setIdle(); setStatus("❌ " + err.message, "error"); })
-        .runDescription();
+        .withSuccessHandler(function(imgInfo) {
+          if (imgInfo.hasImages) {
+            var provider = settings.provider || 'gemini';
+            var model = settings.model || '';
+            if (typeof isMultimodalClient === 'function' && !isMultimodalClient(provider, model)) {
+              addLog('⚠ ' + imgInfo.count + ' imagem(ns) detectada(s). O modelo atual pode não suportá-las, mas o processamento continuará.', 'warning');
+            } else {
+              addLog('⚠ ' + imgInfo.count + ' imagem(ns) detectada(s) na planilha.', 'warning');
+            }
+          }
+
+          google.script.run
+            .withSuccessHandler(function(initResult) {
+              addLog(initResult.message, getLogClass(initResult.message));
+              if (!initResult.done) {
+                updateProgress(0, initResult.total);
+                nextProcessingStep(settings, initResult.total);
+              } else {
+                setIdle();
+                appState = 'idle';
+                updateProgress(0, 0);
+              }
+            })
+            .withFailureHandler(function(err) {
+              addLog('❌ ' + err.message, 'error');
+              setIdle();
+              appState = 'idle';
+            })
+            .startProcessingSession();
+        })
+        .withFailureHandler(function(err) {
+          addLog('⚠ Aviso: ' + err.message, 'warning');
+          google.script.run
+            .withSuccessHandler(function(initResult) {
+              addLog(initResult.message, getLogClass(initResult.message));
+              if (!initResult.done) {
+                updateProgress(0, initResult.total);
+                nextProcessingStep(settings, initResult.total);
+              } else {
+                setIdle();
+                appState = 'idle';
+              }
+            })
+            .withFailureHandler(function(err2) {
+              addLog('❌ ' + err2.message, 'error');
+              setIdle();
+              appState = 'idle';
+            })
+            .startProcessingSession();
+        })
+        .hasImages();
+    }
+
+    function nextProcessingStep(settings, total) {
+      if (appState !== 'processing') return;
+      var settingsJson = JSON.stringify(settings);
+      google.script.run
+        .withSuccessHandler(function(result) {
+          addLog(result.message, getLogClass(result.message));
+          var done = result.processedCount + result.skippedCount;
+          updateProgress(done, result.total || total);
+          if (!result.done) {
+            nextProcessingStep(settings, result.total || total);
+          } else {
+            setIdle();
+            appState = 'idle';
+          }
+        })
+        .withFailureHandler(function(err) {
+          addLog('❌ ' + err.message, 'error');
+          setIdle();
+          appState = 'idle';
+        })
+        .processingStep(settingsJson);
+    }
+
+    function cancelAction() {
+      if (appState === 'listing') {
+        appState = 'idle';
+        google.script.run
+          .withSuccessHandler(function(msg) {
+            addLog('✅ ' + msg, 'success');
+            setIdle();
+          })
+          .withFailureHandler(function() { setIdle(); })
+          .cancelListing();
+      } else if (appState === 'processing') {
+        appState = 'idle';
+        google.script.run
+          .withSuccessHandler(function(msg) {
+            addLog('✅ ' + msg, 'success');
+            setIdle();
+          })
+          .withFailureHandler(function() { setIdle(); })
+          .cancelProcessing();
+      }
     }
 
     function exportCsv() {
-      setBusy("Gerando metadata.csv...");
+      setBusy('export');
+      addLog('📥 Gerando metadata.csv...', 'info');
       google.script.run
-        .withSuccessHandler(fileUrl => {
+        .withSuccessHandler(function(fileUrl) {
           setIdle();
-          setStatus(
-            '✅ CSV gerado com sucesso.<br><a href="' + fileUrl + '" target="_blank">Abrir metadata.csv</a>',
-            "success"
-          );
+          addLog('✅ CSV gerado! <a href="' + fileUrl + '" target="_blank">Abrir metadata.csv</a>', 'success');
         })
-        .withFailureHandler(err => { setIdle(); setStatus("❌ " + err.message, "error"); })
+        .withFailureHandler(function(err) {
+          setIdle();
+          addLog('❌ ' + err.message, 'error');
+        })
         .exportCsvForArchivematica();
     }
 
-    function resetCheckpointUI() {
-      google.script.run
-        .withSuccessHandler(() => setStatus("✅ Checkpoint reiniciado. A próxima listagem começará do início.", "success"))
-        .withFailureHandler(err => setStatus("❌ " + err.message, "error"))
-        .resetCheckpoint();
+    function addLog(message, cls) {
+      var area = document.getElementById('logArea');
+      var div = document.createElement('div');
+      div.className = 'log-entry ' + (cls || 'normal');
+      div.innerHTML = message;
+      area.appendChild(div);
+      area.scrollTop = area.scrollHeight;
     }
+
+    function getLogClass(message) {
+      if (!message) return 'normal';
+      if (message.indexOf('✅') >= 0) return 'success';
+      if (message.indexOf('⚠') >= 0) return 'warning';
+      if (message.indexOf('❌') >= 0) return 'error';
+      if (message.indexOf('🤖') >= 0 || message.indexOf('📂') >= 0) return 'info';
+      return 'normal';
+    }
+
+    function setBusy(action) {
+      document.getElementById('btnList').disabled = true;
+      document.getElementById('btnDescribe').disabled = true;
+      document.getElementById('btnExport').disabled = true;
+      if (action !== 'export') {
+        document.getElementById('btnCancel').style.display = 'block';
+      }
+    }
+
+    function setIdle() {
+      document.getElementById('btnList').disabled = false;
+      document.getElementById('btnDescribe').disabled = false;
+      document.getElementById('btnExport').disabled = false;
+      document.getElementById('btnCancel').style.display = 'none';
+    }
+
+    function updateProgress(current, total) {
+      var section = document.getElementById('progressSection');
+      var fill = document.getElementById('progressFill');
+      var count = document.getElementById('progressCount');
+
+      if (!total || total === 0) {
+        section.style.display = 'none';
+        fill.style.width = '0%';
+        return;
+      }
+
+      section.style.display = 'block';
+      var pct = Math.round((current / total) * 100);
+      fill.style.width = pct + '%';
+      count.textContent = current + '/' + total;
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      loadSettings();
+      updateProviderUI();
+    });
   </script>
 
 </body>

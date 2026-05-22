@@ -15,8 +15,7 @@ function initListing(folderId) {
     folderCount: 0
   };
 
-  const cache = CacheService.getUserCache();
-  cache.put('listingState', JSON.stringify(state), 21600);
+  CacheService.getUserCache().put('listingState', JSON.stringify(state), 21600);
 
   return {
     done: false,
@@ -31,7 +30,12 @@ function listingStep() {
   const raw = cache.get('listingState');
 
   if (!raw) {
-    return { done: true, message: '✅ Nenhum estado encontrado. Execute iniciar listagem primeiro.', processedCount: 0, folderCount: 0 };
+    return {
+      done: true,
+      message: '✅ Nenhum estado encontrado. Execute iniciar listagem primeiro.',
+      processedCount: 0,
+      folderCount: 0
+    };
   }
 
   const state = JSON.parse(raw);
@@ -55,9 +59,8 @@ function listingStep() {
   try {
     folder = DriveApp.getFolderById(folderId);
   } catch (e) {
-    try {
-      cache.put('listingState', JSON.stringify(state), 21600);
-    } catch (_) {}
+    state.folderQueue = queue;
+    try { cache.put('listingState', JSON.stringify(state), 21600); } catch (_) {}
     return {
       done: false,
       message: '⚠ Pasta inacessível: ' + folderId,

@@ -42,8 +42,7 @@ function getFileContent(file, mimeType) {
     }
   }
 
-  if (textTypes.some(t => mimeType.startsWith(t.split('/')[0]) && mimeType.includes(t.split('/')[1])) ||
-      mimeType.startsWith('text/')) {
+  if (textTypes.some(t => mimeType === t) || mimeType.startsWith('text/')) {
     try {
       const text = file.getBlob().getDataAsString().substring(0, 15000);
       return { type: 'text', content: text };
@@ -57,7 +56,6 @@ function getFileContent(file, mimeType) {
 
 function extractPdfText(file) {
   try {
-    const blob = file.getBlob();
     const resource = {
       title: '_tmp_pdf_' + file.getId(),
       mimeType: 'application/vnd.google-apps.document'
@@ -87,22 +85,16 @@ function callAI(settings, prompt, fileId, mimeType) {
   }
 
   const blob = file.getBlob();
-  const sizeBytes = blob.getBytes().length;
-  if (sizeBytes > 10 * 1024 * 1024) {
+  if (blob.getBytes().length > 10 * 1024 * 1024) {
     return 'SKIP_LINE';
   }
 
   const provider = settings.provider || 'gemini';
 
-  if (provider === 'gemini') {
-    return callGemini(settings, prompt, file, mimeType);
-  } else if (provider === 'openai') {
-    return callOpenAI(settings, prompt, file, mimeType);
-  } else if (provider === 'openrouter') {
-    return callOpenRouter(settings, prompt, file, mimeType);
-  } else if (provider === 'ollama') {
-    return callOllama(settings, prompt, file, mimeType);
-  }
+  if (provider === 'gemini') return callGemini(settings, prompt, file, mimeType);
+  if (provider === 'openai') return callOpenAI(settings, prompt, file, mimeType);
+  if (provider === 'openrouter') return callOpenRouter(settings, prompt, file, mimeType);
+  if (provider === 'ollama') return callOllama(settings, prompt, file, mimeType);
 
   return 'SKIP_LINE';
 }
@@ -130,9 +122,7 @@ function callGemini(settings, prompt, file, mimeType, retries) {
     parts.push({ text: prompt });
   }
 
-  const payload = {
-    contents: [{ parts }]
-  };
+  const payload = { contents: [{ parts }] };
 
   for (let attempt = 0; attempt < retries; attempt++) {
     const response = UrlFetchApp.fetch(url, {
@@ -181,10 +171,7 @@ function callOpenAI(settings, prompt, file, mimeType) {
       role: 'user',
       content: [
         { type: 'text', text: prompt },
-        {
-          type: 'image_url',
-          image_url: { url: 'data:' + content.mimeType + ';base64,' + content.base64 }
-        }
+        { type: 'image_url', image_url: { url: 'data:' + content.mimeType + ';base64,' + content.base64 } }
       ]
     }];
   } else if (content.type === 'pdf') {
@@ -197,12 +184,7 @@ function callOpenAI(settings, prompt, file, mimeType) {
     messages = [{ role: 'user', content: prompt }];
   }
 
-  const payload = {
-    model,
-    messages,
-    max_tokens: 1500,
-    temperature: 0
-  };
+  const payload = { model, messages, max_tokens: 1500, temperature: 0 };
 
   const response = UrlFetchApp.fetch(url, {
     method: 'post',
@@ -212,8 +194,7 @@ function callOpenAI(settings, prompt, file, mimeType) {
     muteHttpExceptions: true
   });
 
-  const code = response.getResponseCode();
-  if (code !== 200) return 'SKIP_LINE';
+  if (response.getResponseCode() !== 200) return 'SKIP_LINE';
 
   const json = JSON.parse(response.getContentText());
   return json.choices[0].message.content;
@@ -232,10 +213,7 @@ function callOpenRouter(settings, prompt, file, mimeType) {
       role: 'user',
       content: [
         { type: 'text', text: prompt },
-        {
-          type: 'image_url',
-          image_url: { url: 'data:' + content.mimeType + ';base64,' + content.base64 }
-        }
+        { type: 'image_url', image_url: { url: 'data:' + content.mimeType + ';base64,' + content.base64 } }
       ]
     }];
   } else if (content.type === 'pdf') {
@@ -248,12 +226,7 @@ function callOpenRouter(settings, prompt, file, mimeType) {
     messages = [{ role: 'user', content: prompt }];
   }
 
-  const payload = {
-    model,
-    messages,
-    max_tokens: 1500,
-    temperature: 0
-  };
+  const payload = { model, messages, max_tokens: 1500, temperature: 0 };
 
   const response = UrlFetchApp.fetch(url, {
     method: 'post',
@@ -267,8 +240,7 @@ function callOpenRouter(settings, prompt, file, mimeType) {
     muteHttpExceptions: true
   });
 
-  const code = response.getResponseCode();
-  if (code !== 200) return 'SKIP_LINE';
+  if (response.getResponseCode() !== 200) return 'SKIP_LINE';
 
   const json = JSON.parse(response.getContentText());
   return json.choices[0].message.content;
@@ -280,11 +252,7 @@ function callOllama(settings, prompt, file, mimeType) {
   const url = ollamaUrl + '/api/generate';
 
   const content = getFileContent(file, mimeType);
-  const payload = {
-    model,
-    prompt,
-    stream: false
-  };
+  const payload = { model, prompt, stream: false };
 
   if (content.type === 'image') {
     payload.images = [content.base64];
@@ -299,8 +267,7 @@ function callOllama(settings, prompt, file, mimeType) {
     muteHttpExceptions: true
   });
 
-  const code = response.getResponseCode();
-  if (code !== 200) return 'SKIP_LINE';
+  if (response.getResponseCode() !== 200) return 'SKIP_LINE';
 
   const json = JSON.parse(response.getContentText());
   return json.response || 'SKIP_LINE';
