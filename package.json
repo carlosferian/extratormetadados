@@ -1,0 +1,11 @@
+{
+  "name": "extratormetadados",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "deploy": "node deploy.js"
+  },
+  "dependencies": {
+    "googleapis": "^144.0.0"
+  }
+}
