@@ -64,8 +64,15 @@ Para garantir que o script processe lotes gigantes de arquivos e arquivos pesado
 
 ## 🚀 5. Pipeline de CI/CD (GitHub Actions ➔ CLASP)
 
-O deploy do sistema está 100% automatizado:
-* Sempre que uma alteração é integrada, a GitHub Actions lê as credenciais seguras do arquivo `.clasprc.json` (salvo na variável de ambiente `CLASPRC_JSON` da organização) e executa o empurrão automático do código direto para o script hospedado no Google Cloud do TRE-PR usando o CLI **`@google/clasp`**.
+O deploy do sistema está 100% automatizado e funcional a partir do branch `claude/cool-wozniak-3iO70`:
+
+* Sempre que há push nos branches `main`, `master` ou `claude/**`, o GitHub Actions instala o **clasp 2.5.0** e faz push automático para o Apps Script.
+* As credenciais OAuth são lidas do secret `CLASPRC_JSON` (formato `authorized_user` da google-auth-library) e convertidas automaticamente para o formato interno esperado pelo clasp 2.x (`token` + `oauth2ClientSettings`) por um step de conversão no próprio workflow.
+* Script ID do projeto Apps Script: `1dB9_r9R2N3UZAjrYW5UAlKd5I8zl-9hO5H0d3FwFEif-81Urv83WUkQV`
+
+**Problemas resolvidos nesta sessão:**
+1. Versão `^2.5.2` do clasp não existia no npm → fixada para `2.5.0` (exata).
+2. Incompatibilidade de formato entre `~/.clasprc.json` local e o esperado pelo clasp → step de conversão automática adicionado ao workflow.
 
 ---
 
@@ -81,3 +88,20 @@ Quando formos retomar o progresso no futuro, aqui está a trilha de testes recom
    * Marcar 5 itens na tabela visual, clicar em `Marcar como NÃO` e verificar se a planilha atualiza instantaneamente a coluna `repositório`.
 3. **Validação de CSV**:
    * Rodar o lote completo, clicar em `Exportar CSV` e validar se o arquivo baixado está no formato idêntico ao exigido pelo Archivematica.
+
+---
+
+## 📋 7. Próximas Etapas
+
+### Pendências técnicas
+- [ ] **Remover `src/Gemini.js`** — arquivo obsoleto, não é mais usado pela aplicação; basta deletar e fazer push (o deploy automático já está funcionando).
+- [ ] **Fazer merge do branch para `main`** — todo o trabalho está em `claude/cool-wozniak-3iO70` e ainda não foi integrado.
+- [ ] **Atualizar secret `CLASPRC_JSON`** se o token expirar — o `access_token` expira em ~1h, mas o `refresh_token` renova automaticamente. Se o clasp parar de autenticar no futuro, rodar `clasp login` localmente e atualizar o secret no GitHub com o novo `~/.clasprc.json`.
+
+### Melhorias funcionais sugeridas
+- [ ] Preencher `dc.date` automaticamente com `file.getDateCreated()` durante a listagem.
+- [ ] Suporte a paginação na listagem para evitar timeout em pastas com muitos arquivos.
+- [ ] Botão "Forçar reprocessamento" para linhas já descritas pela IA.
+- [ ] Exportar apenas as linhas marcadas com "SIM" (coluna A) no CSV.
+- [ ] Validação do CSV antes de exportar: alertar se houver linhas sem `filename`.
+- [ ] Campo de filtro por tipo de arquivo na listagem (ex: listar apenas imagens).
