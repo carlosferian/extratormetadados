@@ -174,18 +174,18 @@ function processingStep(settingsJson) {
   const list = extractListFromResponse(response);
   const forceReprocess = !!state.forceReprocess;
 
-  if (list.length >= 4) {
+  if (list[0]) {
     const range = sheet.getRange(rowNumber, 1, 1, REQUIRED_HEADERS.length);
     const currentValues = range.getValues()[0];
 
-    if (forceReprocess || !currentValues[COL.title])       currentValues[COL.title]       = list[0].trim();
-    if (forceReprocess || !currentValues[COL.subject1])    currentValues[COL.subject1]    = list[1].trim();
-    if (forceReprocess || !currentValues[COL.subject2])    currentValues[COL.subject2]    = list[2].trim();
-    if (forceReprocess || !currentValues[COL.description]) currentValues[COL.description] = list[3].trim();
+    if (list[0] && (forceReprocess || !currentValues[COL.title]))       currentValues[COL.title]       = list[0];
+    if (list[1] && (forceReprocess || !currentValues[COL.subject1]))    currentValues[COL.subject1]    = list[1];
+    if (list[2] && (forceReprocess || !currentValues[COL.subject2]))    currentValues[COL.subject2]    = list[2];
+    if (list[3] && (forceReprocess || !currentValues[COL.description])) currentValues[COL.description] = list[3];
 
     currentValues[COL.contributor] = provider + ':' + model;
 
-    const processNum = list[4] && list[4].trim() !== 'N/A' ? list[4].trim() : '';
+    const processNum = list[4] && list[4] !== 'N/A' ? list[4] : '';
     if (processNum && (forceReprocess || !currentValues[COL.processId])) {
       currentValues[COL.processId] = processNum;
     }
@@ -199,15 +199,15 @@ function processingStep(settingsJson) {
 
   cache.put('processingState', JSON.stringify(state), 21600);
 
-  const processNum = list[4] && list[4].trim() !== 'N/A' ? list[4].trim() : '';
-  const msgs = list.length >= 4
+  const processNum = list[4] && list[4] !== 'N/A' ? list[4] : '';
+  const msgs = list[0]
     ? [
         { text: '✓ ' + shortName, type: 'success' },
-        { text: '  📌 ' + list[0].trim(), type: 'normal' },
-        { text: '  📅 ' + list[1].trim(), type: 'normal' },
-        { text: '  🏷️ ' + list[2].trim(), type: 'normal' },
-        ...(processNum ? [{ text: '  📎 Processo: ' + processNum, type: 'info' }] : [])
-      ]
+        list[0] ? { text: '  📌 ' + list[0], type: 'normal' } : null,
+        list[1] ? { text: '  📅 ' + list[1], type: 'normal' } : null,
+        list[2] ? { text: '  🏷️ ' + list[2], type: 'normal' } : null,
+        processNum ? { text: '  📎 Processo: ' + processNum, type: 'info' } : null
+      ].filter(Boolean)
     : [{ text: '⚠ Resposta inválida da IA: ' + shortName, type: 'warning' }];
 
   return {
@@ -254,13 +254,25 @@ function buildPrompt(fileName, mimeType) {
 
 function extractListFromResponse(response) {
   if (!response) return [];
-  const match = response.match(/\[([^\]]+)\]/s);
-  if (!match) return [];
-  const parts = match[1].split(';').map(p => p.trim());
-  if (parts.length < 4) return [];
-  // Normalize to 5 elements; pad with empty string if process number absent
-  if (parts.length === 4) parts.push('');
-  return parts.slice(0, 5);
+
+  // Prefer text inside [...], fall back to full response
+  const bracketMatch = response.match(/\[([^\]]+)\]/s);
+  const candidates = bracketMatch ? [bracketMatch[1], response] : [response];
+
+  // Try separators in preference order: semicolon → pipe → newline
+  const separators = [';', '|', /\r?\n+/];
+
+  for (const text of candidates) {
+    for (const sep of separators) {
+      const parts = text.split(sep).map(p => p.trim()).filter(Boolean);
+      if (parts.length >= 3) {
+        while (parts.length < 5) parts.push('');
+        return parts.slice(0, 5);
+      }
+    }
+  }
+
+  return [];
 }
 
 function cancelProcessing() {
