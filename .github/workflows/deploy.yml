@@ -23,9 +23,11 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Deploy to Apps Script
+      - name: Create clasp auth file
         env:
-          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
-          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
-          GOOGLE_REFRESH_TOKEN: ${{ secrets.GOOGLE_REFRESH_TOKEN }}
-        run: node deploy.js
+          CLASPRC_JSON: ${{ secrets.CLASPRC_JSON }}
+        run: echo "$CLASPRC_JSON" > ~/.clasprc.json
+
+      - name: Deploy to Apps Script
+        run: npx @google/clasp push --force
+

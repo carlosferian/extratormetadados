@@ -12,6 +12,12 @@ function showSidebar() {
   SpreadsheetApp.getUi().showSidebar(html);
 }
 
+function doGet(e) {
+  return HtmlService.createHtmlOutputFromFile('Interface')
+    .setTitle('Extrator de Metadados')
+    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+}
+
 function getCurrentSpreadsheetUrl() {
   return SpreadsheetApp.getActiveSpreadsheet().getUrl();
 }
@@ -30,11 +36,24 @@ function getFolderIdFromUrl(url) {
 }
 
 function getSettings() {
-  const props = PropertiesService.getUserProperties().getProperties();
+  const userProps = PropertiesService.getUserProperties();
+  const props = userProps.getProperties();
+  
+  let geminiModel = props.geminiModel || 'gemini-2.5-flash';
+  // Auto-upgrade legacy/deprecated Gemini models to gemini-2.5-flash
+  if (geminiModel.indexOf('gemini-1.5-flash') !== -1 || geminiModel.indexOf('gemini-2.0-flash') !== -1) {
+    geminiModel = 'gemini-2.5-flash';
+    try {
+      userProps.setProperty('geminiModel', 'gemini-2.5-flash');
+    } catch (e) {
+      // Ignore errors during persistent upgrade, but return correct value
+    }
+  }
+
   return {
     provider:         props.provider         || 'gemini',
     geminiApiKey:     props.geminiApiKey      || '',
-    geminiModel:      props.geminiModel       || 'gemini-2.0-flash',
+    geminiModel:      geminiModel,
     openaiApiKey:     props.openaiApiKey      || '',
     openaiModel:      props.openaiModel       || 'gpt-4o',
     openrouterApiKey: props.openrouterApiKey  || '',
@@ -46,10 +65,15 @@ function getSettings() {
 
 function saveSettings(settings) {
   const props = PropertiesService.getUserProperties();
+  let geminiModel = settings.geminiModel || 'gemini-2.5-flash';
+  if (geminiModel.indexOf('gemini-1.5-flash') !== -1 || geminiModel.indexOf('gemini-2.0-flash') !== -1) {
+    geminiModel = 'gemini-2.5-flash';
+  }
+
   props.setProperties({
     provider:         settings.provider         || 'gemini',
     geminiApiKey:     settings.geminiApiKey      || '',
-    geminiModel:      settings.geminiModel       || 'gemini-2.0-flash',
+    geminiModel:      geminiModel,
     openaiApiKey:     settings.openaiApiKey      || '',
     openaiModel:      settings.openaiModel       || 'gpt-4o',
     openrouterApiKey: settings.openrouterApiKey  || '',
@@ -60,8 +84,33 @@ function saveSettings(settings) {
   return 'Configurações salvas.';
 }
 
+function getCurrentFolderUrl() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  if (!ss) {
+    throw new Error("Como o painel está aberto em aba cheia (Web App), não há uma planilha ativa no navegador para detectar a pasta. Por favor, cole o link ou ID da pasta do Google Drive diretamente no campo de texto.");
+  }
+  const parents = DriveApp.getFileById(ss.getId()).getParents();
+  if (parents.hasNext()) {
+    return parents.next().getUrl();
+  }
+  throw new Error("Esta planilha não está em nenhuma pasta.");
+}
+
+function getFolderIdFromInput(input) {
+  if (!input) throw new Error('Caminho inválido. Forneça o link ou ID da pasta do Google Drive.');
+  
+  // Procura pelo ID da pasta em URLs típicos do Google Drive
+  const match = input.match(/folders\/([a-zA-Z0-9_-]+)/);
+  if (match) return match[1];
+  
+  // Se for um ID bruto (sem barras), retorna o próprio valor sanitizado
+  if (!input.includes('/')) return input.trim();
+  
+  throw new Error('Formato de pasta inválido. Use o link completo da pasta ou seu ID.');
+}
+
 function hasImages() {
-  const sheet = SpreadsheetApp.getActiveSheet();
+  const sheet = getActiveMetadataSheet();
   const lastRow = sheet.getLastRow();
   if (lastRow <= 1) return { hasImages: false, count: 0 };
 
@@ -73,11 +122,11 @@ function hasImages() {
   return { hasImages: count > 0, count };
 }
 
-function startListingSession(spreadsheetUrl) {
-  const folderId = getFolderIdFromUrl(spreadsheetUrl);
+function startListingSession(folderUrlOrId) {
+  const folderId = getFolderIdFromInput(folderUrlOrId);
   return initListing(folderId);
 }
 
-function startProcessingSession() {
-  return initProcessing();
+function startProcessingSession(forceReprocess = false, selectedRowNums = null) {
+  return initProcessing(forceReprocess, selectedRowNums);
 }

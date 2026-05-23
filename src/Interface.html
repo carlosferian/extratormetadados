@@ -3,36 +3,44 @@
 <head>
   <base target="_top">
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: Arial, sans-serif;
-      font-size: 13px;
-      color: #202124;
-      background: #fff;
+      font-family: 'Inter', sans-serif;
+      font-size: 14.5px;
+      color: #1e293b;
+      background: #f8fafc;
+      padding-bottom: 24px;
     }
 
     .header {
-      background: #1a73e8;
+      background: linear-gradient(135deg, #1e3a8a, #3b82f6);
       color: #fff;
-      padding: 14px 16px;
+      padding: 16px 16px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     }
-    .header h2 { font-size: 15px; font-weight: 600; }
-    .header p  { font-size: 11px; opacity: .8; margin-top: 2px; }
+    .header h2 { font-size: 17px; font-weight: 700; letter-spacing: -0.5px; }
+    .header p  { font-size: 12px; opacity: .85; margin-top: 3px; font-weight: 500; }
 
     .section {
-      padding: 12px 16px;
-      border-bottom: 1px solid #e0e0e0;
+      background: #fff;
+      margin: 12px 12px 0 12px;
+      padding: 14px 16px;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      border: 1px solid #f1f5f9;
     }
 
     label {
       display: block;
-      font-size: 10px;
+      font-size: 11.5px;
       font-weight: 700;
-      color: #5f6368;
+      color: #64748b;
       text-transform: uppercase;
-      letter-spacing: .5px;
-      margin-bottom: 4px;
+      letter-spacing: .75px;
+      margin-bottom: 6px;
     }
 
     input[type="url"],
@@ -40,43 +48,50 @@
     input[type="password"],
     select {
       width: 100%;
-      padding: 7px 9px;
-      border: 1px solid #dadce0;
-      border-radius: 4px;
-      font-size: 12px;
+      padding: 8px 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      font-size: 13.5px;
       outline: none;
-      color: #202124;
+      color: #0f172a;
       background: #fff;
+      transition: all 0.2s;
     }
     input[type="url"]:focus,
     input[type="text"]:focus,
     input[type="password"]:focus,
-    select:focus { border-color: #1a73e8; box-shadow: 0 0 0 2px rgba(26,115,232,.15); }
+    select:focus { 
+      border-color: #3b82f6; 
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); 
+    }
 
-    .field { margin-bottom: 8px; }
+    .field { margin-bottom: 12px; }
     .field:last-child { margin-bottom: 0; }
 
     .hint {
-      font-size: 11px;
-      color: #5f6368;
-      margin-top: 4px;
+      font-size: 12.5px;
+      color: #64748b;
+      margin-top: 6px;
+      line-height: 1.4;
     }
-    .hint a { color: #1a73e8; text-decoration: none; }
+    .hint a { color: #3b82f6; text-decoration: none; font-weight: 500; }
     .hint a:hover { text-decoration: underline; }
 
     .use-current {
-      margin-top: 8px;
-      background: none;
-      border: 1px solid #dadce0;
-      border-radius: 4px;
-      padding: 5px 10px;
-      font-size: 11px;
-      color: #1a73e8;
+      margin-top: 10px;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-size: 12.5px;
+      color: #2563eb;
+      font-weight: 600;
       cursor: pointer;
       width: 100%;
-      text-align: left;
+      text-align: center;
+      transition: all 0.2s;
     }
-    .use-current:hover { background: #e8f0fe; }
+    .use-current:hover { background: #dbeafe; color: #1d4ed8; }
 
     /* Accordion */
     .accordion-header {
@@ -84,123 +99,573 @@
       align-items: center;
       justify-content: space-between;
       cursor: pointer;
+      margin: 12px 12px 0 12px;
       padding: 12px 16px;
-      border-bottom: 1px solid #e0e0e0;
+      border-radius: 8px;
+      background: #fff;
+      border: 1px solid #f1f5f9;
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
       user-select: none;
-      background: #f8f9fa;
+      transition: background 0.2s;
     }
-    .accordion-header:hover { background: #f1f3f4; }
+    .accordion-header:hover { background: #f8fafc; }
     .accordion-title {
-      font-size: 11px;
+      font-size: 12px;
       font-weight: 700;
-      color: #5f6368;
+      color: #475569;
       text-transform: uppercase;
-      letter-spacing: .5px;
+      letter-spacing: .75px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
     .chevron {
-      font-size: 10px;
-      color: #5f6368;
+      font-size: 11px;
+      color: #64748b;
       transition: transform .2s;
     }
     .chevron.open { transform: rotate(180deg); }
+    
     .accordion-body {
       display: none;
-      padding: 12px 16px;
-      border-bottom: 1px solid #e0e0e0;
+      background: #fff;
+      margin: 2px 12px 0 12px;
+      padding: 14px 16px;
+      border-radius: 8px;
+      border: 1px solid #f1f5f9;
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
     }
     .accordion-body.open { display: block; }
 
     .model-hint {
-      font-size: 10px;
-      color: #80868b;
-      margin-top: 4px;
-      line-height: 1.4;
+      font-size: 11.5px;
+      color: #64748b;
+      margin-top: 6px;
+      line-height: 1.5;
+      background: #f8fafc;
+      padding: 6px 8px;
+      border-radius: 4px;
+      border-left: 2px solid #cbd5e1;
     }
 
     /* Actions */
     .actions {
-      padding: 12px 16px;
+      margin: 12px 12px 0 12px;
       display: flex;
       flex-direction: column;
-      gap: 7px;
-      border-bottom: 1px solid #e0e0e0;
+      gap: 8px;
     }
 
     button {
-      padding: 9px 14px;
+      padding: 10px 16px;
       border: none;
-      border-radius: 4px;
-      font-size: 12px;
-      font-weight: 500;
+      border-radius: 6px;
+      font-size: 13.5px;
+      font-weight: 600;
       cursor: pointer;
-      text-align: left;
+      text-align: center;
       width: 100%;
-      transition: filter .15s;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
     }
-    button:hover:not(:disabled) { filter: brightness(.93); }
-    button:disabled { opacity: .5; cursor: not-allowed; }
+    button:hover:not(:disabled) { filter: brightness(.95); transform: translateY(-0.5px); }
+    button:active:not(:disabled) { transform: translateY(0.5px); }
+    button:disabled { opacity: .5; cursor: not-allowed; transform: none !important; }
 
-    .btn-blue   { background: #1a73e8; color: #fff; }
-    .btn-grey   { background: #f1f3f4; color: #202124; }
-    .btn-green  { background: #34a853; color: #fff; }
-    .btn-red    { background: #fff; color: #c5221f; border: 1px solid #c5221f; display: none; }
-    .btn-save   { background: #fff; color: #1a73e8; border: 1px solid #1a73e8; font-size: 11px; padding: 6px 10px; }
-    .btn-save:hover:not(:disabled) { background: #e8f0fe; filter: none; }
+    .btn-blue   { background: #2563eb; color: #fff; box-shadow: 0 2px 4px 0 rgba(37, 99, 235, 0.2); }
+    .btn-grey   { background: #e2e8f0; color: #334155; }
+    .btn-green  { background: #10b981; color: #fff; box-shadow: 0 2px 4px 0 rgba(16, 185, 129, 0.2); }
+    .btn-red    { background: #fff; color: #ef4444; border: 1px solid #fca5a5; display: none; }
+    .btn-save   { background: #fff; color: #2563eb; border: 1px solid #bfdbfe; font-size: 12.5px; padding: 6px 12px; margin-top: 10px; }
+    .btn-save:hover:not(:disabled) { background: #eff6ff; }
 
     .divider {
       border: none;
-      border-top: 1px solid #e0e0e0;
-      margin: 0;
+      border-top: 1px solid #e2e8f0;
+      margin: 4px 0;
     }
 
-    /* Progress */
-    .progress-section { padding: 12px 16px; border-bottom: 1px solid #e0e0e0; display: none; }
-    .progress-label { font-size: 10px; color: #5f6368; margin-bottom: 5px; display: flex; justify-content: space-between; }
+    /* Active File Card UX */
+    .active-card {
+      background: #fff;
+      margin: 12px 12px 0 12px;
+      padding: 14px 16px;
+      border-radius: 8px;
+      border: 1px solid #bfdbfe;
+      background: linear-gradient(to right, #ffffff, #eff6ff);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+      display: none;
+    }
+    .active-card-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .active-icon {
+      font-size: 24px;
+      background: #dbeafe;
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .active-info {
+      flex: 1;
+      overflow: hidden;
+    }
+    .active-name {
+      font-weight: 600;
+      font-size: 13.5px;
+      color: #1e3a8a;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+    }
+    .active-status {
+      font-size: 12px;
+      color: #2563eb;
+      font-weight: 500;
+    }
+
+    /* Stepper UX */
+    .stepper {
+      display: flex;
+      justify-content: space-between;
+      position: relative;
+      margin-top: 12px;
+      padding: 0 4px;
+    }
+    .stepper::before {
+      content: '';
+      position: absolute;
+      top: 11px;
+      left: 12px;
+      right: 12px;
+      height: 2px;
+      background: #e2e8f0;
+      z-index: 1;
+    }
+    .step-node {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 25%;
+    }
+    .step-circle {
+      width: 23px;
+      height: 23px;
+      border-radius: 50%;
+      background: #fff;
+      border: 2px solid #cbd5e1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      color: #64748b;
+      transition: all 0.3s;
+    }
+    .step-node.active .step-circle {
+      border-color: #2563eb;
+      color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+      animation: pulse 1.5s infinite;
+    }
+    .step-node.completed .step-circle {
+      background: #10b981;
+      border-color: #10b981;
+      color: #fff;
+    }
+    .step-label {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: #64748b;
+      margin-top: 4px;
+      text-align: center;
+    }
+    .step-node.active .step-label { color: #2563eb; font-weight: 700; }
+    .step-node.completed .step-label { color: #10b981; }
+
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.08); }
+      100% { transform: scale(1); }
+    }
+
+    /* Stats Dashboard UX */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      margin-top: 12px;
+      background: #f8fafc;
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid #e2e8f0;
+    }
+    .stat-card {
+      text-align: center;
+    }
+    .stat-val {
+      font-weight: 700;
+      font-size: 15px;
+      color: #0f172a;
+    }
+    .stat-label {
+      font-size: 10px;
+      font-weight: 700;
+      color: #64748b;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+    .stat-card.error .stat-val { color: #ef4444; }
+    .stat-card.success .stat-val { color: #10b981; }
+
+    /* Progress Bar */
+    .progress-section {
+      background: #fff;
+      margin: 12px 12px 0 12px;
+      padding: 14px 16px;
+      border-radius: 8px;
+      border: 1px solid #f1f5f9;
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+      display: none;
+    }
+    .progress-label {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: #475569;
+      margin-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+    }
     .progress-bar-bg {
-      background: #e0e0e0;
-      border-radius: 4px;
-      height: 6px;
+      background: #e2e8f0;
+      border-radius: 6px;
+      height: 8px;
       overflow: hidden;
     }
     .progress-bar-fill {
-      background: #1a73e8;
+      background: linear-gradient(90deg, #3b82f6, #2563eb);
       height: 100%;
       width: 0%;
-      border-radius: 4px;
-      transition: width .3s ease;
+      border-radius: 6px;
+      transition: width 0.3s ease;
     }
 
-    /* Log */
-    .log-section { padding: 12px 16px; }
-    .log-label {
-      font-size: 10px;
+    /* Log (Collapsible Accordion) */
+    .log-accordion-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      margin: 12px 12px 0 12px;
+      padding: 8px 12px;
+      border-radius: 6px;
+      background: #f1f5f9;
+      user-select: none;
+      transition: background 0.2s;
+    }
+    .log-accordion-header:hover { background: #e2e8f0; }
+    .log-accordion-title {
+      font-size: 11px;
       font-weight: 700;
-      color: #5f6368;
+      color: #475569;
       text-transform: uppercase;
       letter-spacing: .5px;
-      margin-bottom: 6px;
     }
-    .log-area {
-      background: #f8f9fa;
-      border: 1px solid #e0e0e0;
-      border-radius: 4px;
-      padding: 8px;
-      max-height: 200px;
-      overflow-y: auto;
-      font-family: monospace;
+    .log-chevron {
       font-size: 11px;
+      color: #64748b;
+      transition: transform .2s;
+    }
+    .log-chevron.open { transform: rotate(180deg); }
+
+    .log-accordion-body {
+      display: none;
+      margin: 2px 12px 24px 12px;
+    }
+    .log-accordion-body.open { display: block; }
+    
+    .log-area {
+      background: #0f172a;
+      border: 1px solid #1e293b;
+      border-radius: 6px;
+      padding: 10px;
+      max-height: 160px;
+      overflow-y: auto;
+      font-family: 'Courier New', monospace;
+      font-size: 11.5px;
       line-height: 1.5;
+      color: #f1f5f9;
+      box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
     }
     .log-area:empty::before {
       content: 'Aguardando ações...';
-      color: #9aa0a6;
+      color: #64748b;
     }
-    .log-entry { margin-bottom: 2px; word-break: break-word; }
-    .log-entry.success { color: #137333; }
-    .log-entry.warning { color: #e37400; }
-    .log-entry.error   { color: #c5221f; }
-    .log-entry.info    { color: #1558d6; }
-    .log-entry.normal  { color: #202124; }
+    .log-entry { margin-bottom: 3px; word-break: break-word; }
+    .log-entry.success { color: #34d399; }
+    .log-entry.warning { color: #fbbf24; }
+    .log-entry.error   { color: #f87171; }
+    .log-entry.info    { color: #60a5fa; }
+    .log-entry.normal  { color: #e2e8f0; }
+
+    /* Dashboard Split Layout */
+    .dashboard-container {
+      display: flex;
+      gap: 16px;
+      padding: 12px;
+      max-width: 1440px;
+      margin: 0 auto;
+      align-items: flex-start;
+    }
+
+    .left-panel {
+      width: 340px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .right-panel {
+      flex: 1;
+      min-width: 0;
+    }
+
+    /* Em telas estreitas (Sidebar do Planilhas), empilha tudo */
+    @media (max-width: 820px) {
+      .dashboard-container {
+        display: block;
+        padding: 6px;
+      }
+      .left-panel {
+        width: 100%;
+        margin-bottom: 16px;
+      }
+      .right-panel {
+        width: 100%;
+      }
+    }
+
+    /* Estilos Premium para a Tabela e Toolbar */
+    .table-card {
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      border: 1px solid #f1f5f9;
+      padding: 16px;
+    }
+
+    .table-header h3 {
+      font-size: 16px;
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 2px;
+      letter-spacing: -0.25px;
+    }
+
+    .table-header p {
+      font-size: 12px;
+      color: #64748b;
+      margin-bottom: 12px;
+    }
+
+    .table-toolbar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    @media (max-width: 600px) {
+      .table-toolbar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .table-toolbar input {
+        width: 100%;
+      }
+      .bulk-actions {
+        width: 100%;
+        justify-content: space-between;
+      }
+    }
+
+    #tableSearch {
+      flex: 1;
+      padding: 8px 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      font-size: 13.5px;
+      outline: none;
+      transition: all 0.2s;
+    }
+    #tableSearch:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+    }
+
+    .bulk-actions {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .btn-bulk {
+      padding: 6px 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      background: #fff;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .btn-bulk-sim {
+      color: #10b981;
+      border-color: #a7f3d0;
+    }
+    .btn-bulk-sim:hover {
+      background: #ecfdf5;
+      color: #047857;
+    }
+
+    .btn-bulk-nao {
+      color: #ef4444;
+      border-color: #fca5a5;
+    }
+    .btn-bulk-nao:hover {
+      background: #fdf2f2;
+      color: #b91c1c;
+    }
+
+    .btn-refresh {
+      padding: 6px 10px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      background: #fff;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-refresh:hover {
+      background: #f1f5f9;
+    }
+
+    .selection-status {
+      font-size: 12px;
+      color: #475569;
+      font-weight: 500;
+      margin-bottom: 10px;
+      background: #f8fafc;
+      padding: 6px 10px;
+      border-radius: 4px;
+      border: 1px solid #e2e8f0;
+      display: inline-block;
+    }
+
+    .table-wrapper {
+      width: 100%;
+      overflow-x: auto;
+      max-height: 520px;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      text-align: left;
+    }
+
+    th, td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #e2e8f0;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      max-width: 250px;
+    }
+
+    th {
+      background: #f1f5f9;
+      color: #475569;
+      font-weight: 600;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      user-select: none;
+    }
+
+    tr:hover {
+      background: #f8fafc;
+    }
+
+    .no-data-msg {
+      text-align: center;
+      padding: 30px;
+      color: #64748b;
+      font-style: italic;
+    }
+
+    /* Badges de Status na Tabela */
+    .status-badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 11.5px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    .status-concluido {
+      background: #d1fae5;
+      color: #065f46;
+    }
+    .status-pendente {
+      background: #f1f5f9;
+      color: #475569;
+    }
+    .status-ignorado {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .rep-badge {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 700;
+    }
+    .rep-sim {
+      background: #eff6ff;
+      color: #1e40af;
+      border: 1px solid #bfdbfe;
+    }
+    .rep-nao {
+      background: #f1f5f9;
+      color: #94a3b8;
+      border: 1px solid #e2e8f0;
+    }
+
+    .row-checkbox {
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -210,88 +675,211 @@
     <p>TRE-PR &mdash; Archivematica</p>
   </div>
 
-  <!-- Planilha -->
-  <div class="section">
-    <label>Planilha de referência</label>
-    <input type="url" id="spreadsheetUrl" placeholder="https://docs.google.com/spreadsheets/d/...">
-    <p class="hint">A pasta que contém esta planilha será escaneada.</p>
-    <button class="use-current" onclick="useCurrentSheet()">&#8592; Usar esta planilha</button>
-  </div>
+  <div class="dashboard-container">
+    <!-- Coluna Esquerda: Controles -->
+    <div class="left-panel">
+      
+      <!-- Pasta de Referência -->
+      <div class="section">
+        <label>Pasta de referência (Google Drive)</label>
+        <input type="text" id="folderUrl" placeholder="Link ou ID da pasta do Google Drive">
+        <p class="hint">A planilha "metadata" será aberta ou criada nesta pasta para gerenciar os documentos.</p>
+        <button class="use-current" onclick="useCurrentFolder()">&#8592; Usar pasta desta planilha</button>
+      </div>
 
-  <!-- Configurações (accordion) -->
-  <div class="accordion-header" onclick="toggleAccordion()">
-    <span class="accordion-title">&#9881; Configurações</span>
-    <span class="chevron" id="chevron">&#9660;</span>
-  </div>
-  <div class="accordion-body" id="accordionBody">
-    <div class="field">
-      <label>Provedor de IA</label>
-      <select id="provider" onchange="updateProviderUI()">
-        <option value="gemini">Gemini (Google)</option>
-        <option value="openai">OpenAI (ChatGPT)</option>
-        <option value="openrouter">OpenRouter</option>
-        <option value="ollama">Ollama (local)</option>
-      </select>
+      <!-- Configurações (accordion) -->
+      <div class="accordion-header" onclick="toggleAccordion()">
+        <span class="accordion-title">&#9881; Configurações</span>
+        <span class="chevron" id="chevron">&#9660;</span>
+      </div>
+      <div class="accordion-body" id="accordionBody">
+        <div class="field">
+          <label>Provedor de IA</label>
+          <select id="provider" onchange="updateProviderUI()">
+            <option value="gemini">Gemini (Google)</option>
+            <option value="openai">OpenAI (ChatGPT)</option>
+            <option value="openrouter">OpenRouter</option>
+            <option value="ollama">Ollama (local)</option>
+          </select>
+        </div>
+
+        <div class="field" id="fieldApiKey">
+          <label id="labelApiKey">API Key</label>
+          <input type="password" id="apiKey" placeholder="Cole sua API key aqui">
+        </div>
+
+        <div class="field" id="fieldOllamaUrl" style="display:none">
+          <label>URL do Ollama</label>
+          <input type="text" id="ollamaUrl" placeholder="http://localhost:11434">
+        </div>
+
+        <div class="field">
+          <label>Modelo</label>
+          <input type="text" id="model" placeholder="Ex: gemini-2.5-flash">
+          <div class="model-hint" id="modelHint"></div>
+        </div>
+
+        <button class="btn-save" onclick="saveSettingsUI()">Salvar configurações</button>
+      </div>
+
+      <!-- Active File Card (Reativo) -->
+      <div class="active-card" id="activeCard">
+        <div class="active-card-header">
+          <div class="active-icon" id="activeIcon">⚙️</div>
+          <div class="active-info">
+            <div class="active-name" id="activeName">Iniciando...</div>
+            <div class="active-status" id="activeStatus">Aguardando fila</div>
+          </div>
+        </div>
+        
+        <!-- Stepper -->
+        <div class="stepper" id="stepper">
+          <div class="step-node" id="step1">
+            <div class="step-circle">1</div>
+            <div class="step-label">Ler</div>
+          </div>
+          <div class="step-node" id="step2">
+            <div class="step-circle">2</div>
+            <div class="step-label">OCR/Texto</div>
+          </div>
+          <div class="step-node" id="step3">
+            <div class="step-circle">3</div>
+            <div class="step-label">Processar</div>
+          </div>
+          <div class="step-node" id="step4">
+            <div class="step-circle">4</div>
+            <div class="step-label">Gravar</div>
+          </div>
+        </div>
+
+        <!-- Mini Dashboard -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-val" id="statProcessed">0</div>
+            <div class="stat-label">Concluídos</div>
+          </div>
+          <div class="stat-card error">
+            <div class="stat-val" id="statSkipped">0</div>
+            <div class="stat-label">Ignorados</div>
+          </div>
+          <div class="stat-card success">
+            <div class="stat-val" id="statTime">~--:--</div>
+            <div class="stat-label">Restante</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ações -->
+      <div class="actions">
+        <button class="btn-blue" id="btnList" onclick="startListing()">&#128193;&nbsp; Listar documentos</button>
+        
+        <!-- Opção de reprocessamento forçado -->
+        <div style="display: flex; align-items: center; margin: 4px 0 2px 2px;">
+          <input type="checkbox" id="chkForce" style="margin-right: 6px; cursor: pointer; width: auto;">
+          <label for="chkForce" style="margin-bottom: 0; cursor: pointer; text-transform: none; font-weight: normal; font-size: 11px;">Forçar reprocessamento com IA</label>
+        </div>
+
+        <button class="btn-grey" id="btnDescribe" onclick="startDescription()">&#129302;&nbsp; Descrever com IA</button>
+        <hr class="divider">
+        <button class="btn-green" id="btnExport" onclick="exportCsv()">&#128229;&nbsp; Exportar CSV (Archivematica)</button>
+        <button class="btn-red" id="btnCancel" onclick="cancelAction()">&#10005; Cancelar</button>
+      </div>
+
+      <!-- Progresso -->
+      <div class="progress-section" id="progressSection">
+        <div class="progress-label">
+          <span id="progressText">Processando...</span>
+          <span id="progressCount"></span>
+        </div>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" id="progressFill"></div>
+        </div>
+      </div>
+
+      <!-- Log Accordion (Colapsável) -->
+      <div class="log-accordion-header" onclick="toggleLogAccordion()">
+        <span class="log-accordion-title">📟 Detalhes e Logs Técnicos</span>
+        <span class="log-chevron" id="logChevron">&#9660;</span>
+      </div>
+      <div class="log-accordion-body" id="logAccordionBody">
+        <div class="log-area" id="logArea"></div>
+      </div>
+
     </div>
 
-    <div class="field" id="fieldApiKey">
-      <label id="labelApiKey">API Key</label>
-      <input type="password" id="apiKey" placeholder="Cole sua API key aqui">
+    <!-- Coluna Direita: Projeção da Planilha -->
+    <div class="right-panel">
+      <div class="table-card">
+        <div class="table-header">
+          <h3>📋 Projeção da Planilha de Metadados</h3>
+          <p>Visualize as linhas atuais da planilha de metadados, busque por arquivo e selecione linhas específicas para descrever ou atualizar.</p>
+        </div>
+
+        <!-- Barra de Busca e Ações Rápidas -->
+        <div class="table-toolbar">
+          <input type="text" id="tableSearch" placeholder="🔍 Buscar arquivo pelo nome..." oninput="filterTable()">
+          <div class="bulk-actions">
+            <button class="btn-bulk btn-bulk-sim" onclick="bulkToggleRepository(true)" title="Marcar selecionados para processamento">Marcar como SIM</button>
+            <button class="btn-bulk btn-bulk-nao" onclick="bulkToggleRepository(false)" title="Excluir selecionados do processamento">Marcar como NÃO</button>
+            <button class="btn-refresh" onclick="refreshTableData()" title="Atualizar dados da tabela">🔄 Atualizar</button>
+          </div>
+        </div>
+
+        <div class="selection-status" id="selectionStatus">
+          0 arquivo(s) selecionado(s) de 0 total.
+        </div>
+
+        <!-- Tabela wrapper -->
+        <div class="table-wrapper">
+          <table id="metadataTable">
+            <thead>
+              <tr>
+                <th width="30"><input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll(this)"></th>
+                <th width="50">Rep.</th>
+                <th>Arquivo</th>
+                <th>Status</th>
+                <th>Título (Dublin Core)</th>
+                <th>Data</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody">
+              <tr>
+                <td colspan="6" class="no-data-msg">Planilha não conectada ou vazia. Conecte uma pasta de referência para carregar.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
-
-    <div class="field" id="fieldOllamaUrl" style="display:none">
-      <label>URL do Ollama</label>
-      <input type="text" id="ollamaUrl" placeholder="http://localhost:11434">
-    </div>
-
-    <div class="field">
-      <label>Modelo</label>
-      <input type="text" id="model" placeholder="Ex: gemini-2.0-flash">
-      <div class="model-hint" id="modelHint"></div>
-    </div>
-
-    <button class="btn-save" onclick="saveSettingsUI()">Salvar configurações</button>
-  </div>
-
-  <!-- Ações -->
-  <div class="actions">
-    <button class="btn-blue" id="btnList" onclick="startListing()">&#128193;&nbsp; Listar documentos</button>
-    <button class="btn-grey" id="btnDescribe" onclick="startDescription()">&#129302;&nbsp; Descrever com IA</button>
-    <hr class="divider">
-    <button class="btn-green" id="btnExport" onclick="exportCsv()">&#128229;&nbsp; Exportar CSV (Archivematica)</button>
-    <button class="btn-red" id="btnCancel" onclick="cancelAction()">&#10005; Cancelar</button>
-  </div>
-
-  <!-- Progresso -->
-  <div class="progress-section" id="progressSection">
-    <div class="progress-label">
-      <span id="progressText">Processando...</span>
-      <span id="progressCount"></span>
-    </div>
-    <div class="progress-bar-bg">
-      <div class="progress-bar-fill" id="progressFill"></div>
-    </div>
-  </div>
-
-  <!-- Log -->
-  <div class="log-section">
-    <div class="log-label">Log</div>
-    <div class="log-area" id="logArea"></div>
   </div>
 
   <script>
     var appState = 'idle';
+    var startTime = null;
+    var lastProcessedTime = null;
+    var tableRowsData = []; // Cache local dos dados da planilha para busca e seleções rápidas
 
     var MODEL_HINTS = {
-      gemini: 'Multimodal: todos os modelos Gemini suportam imagens.<br>Ex: gemini-2.0-flash, gemini-1.5-pro',
-      openai: 'Multimodal: gpt-4o, gpt-4o-mini, gpt-4-turbo, gpt-4-vision-preview.<br>Texto: gpt-3.5-turbo',
-      openrouter: 'Multimodal: modelos com "vision", "claude-3", "gpt-4o", "gemini", "llava".<br>Ex: google/gemini-flash-1.5, anthropic/claude-3-haiku',
-      ollama: 'Multimodal: llava, bakllava, moondream, cogvlm.<br>Ex: llava, llava:13b, moondream'
+      gemini: 'Multimodal: todos os modelos Gemini suportam imagens.<br>Ex: gemini-2.5-flash',
+      openai: 'Multimodal: gpt-4o, gpt-4o-mini, gpt-4-turbo.<br>Texto: gpt-3.5-turbo',
+      openrouter: 'Multimodal: modelos com "vision", "claude-3", "gpt-4o", "gemini".<br>Ex: google/gemini-flash-1.5, anthropic/claude-3-haiku',
+      ollama: 'Multimodal: llava, bakllava, moondream.<br>Ex: llava, moondream'
     };
 
     function toggleAccordion() {
       var body = document.getElementById('accordionBody');
       var chevron = document.getElementById('chevron');
+      var open = body.classList.toggle('open');
+      if (open) {
+        chevron.classList.add('open');
+      } else {
+        chevron.classList.remove('open');
+      }
+    }
+
+    function toggleLogAccordion() {
+      var body = document.getElementById('logAccordionBody');
+      var chevron = document.getElementById('logChevron');
       var open = body.classList.toggle('open');
       if (open) {
         chevron.classList.add('open');
@@ -331,7 +919,7 @@
           var provider = s.provider || 'gemini';
           if (provider === 'gemini') {
             document.getElementById('apiKey').value = s.geminiApiKey || '';
-            document.getElementById('model').value = s.geminiModel || 'gemini-2.0-flash';
+            document.getElementById('model').value = s.geminiModel || 'gemini-2.5-flash';
           } else if (provider === 'openai') {
             document.getElementById('apiKey').value = s.openaiApiKey || '';
             document.getElementById('model').value = s.openaiModel || 'gpt-4o';
@@ -370,7 +958,7 @@
       return {
         provider: provider,
         geminiApiKey:     provider === 'gemini'      ? apiKey : '',
-        geminiModel:      provider === 'gemini'      ? model  : 'gemini-2.0-flash',
+        geminiModel:      provider === 'gemini'      ? model  : 'gemini-2.5-flash',
         openaiApiKey:     provider === 'openai'      ? apiKey : '',
         openaiModel:      provider === 'openai'      ? model  : 'gpt-4o',
         openrouterApiKey: provider === 'openrouter'  ? apiKey : '',
@@ -390,41 +978,82 @@
       return settings;
     }
 
-    function useCurrentSheet() {
+    function useCurrentFolder() {
       google.script.run
         .withSuccessHandler(function(url) {
-          document.getElementById('spreadsheetUrl').value = url;
+          document.getElementById('folderUrl').value = url;
         })
         .withFailureHandler(function(err) {
           addLog('❌ ' + err.message, 'error');
         })
-        .getCurrentSpreadsheetUrl();
+        .getCurrentFolderUrl();
+    }
+
+    function showActiveCard(icon, name, status, step) {
+      document.getElementById('activeCard').style.display = 'block';
+      document.getElementById('activeIcon').textContent = icon;
+      document.getElementById('activeName').textContent = name;
+      document.getElementById('activeStatus').textContent = status;
+      updateStepper(step);
+    }
+
+    function updateStepper(step) {
+      for (var i = 1; i <= 4; i++) {
+        var node = document.getElementById('step' + i);
+        node.classList.remove('active', 'completed');
+        if (i < step) {
+          node.classList.add('completed');
+        } else if (i === step) {
+          node.classList.add('active');
+        }
+      }
+    }
+
+    function getFileIcon(filename) {
+      if (!filename) return '📝';
+      var ext = filename.split('.').pop().toLowerCase();
+      if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'tiff'].indexOf(ext) >= 0) return '🖼️';
+      if (ext === 'pdf') return '📄';
+      if (['doc', 'docx', 'odt', 'txt', 'rtf'].indexOf(ext) >= 0) return '📝';
+      if (['xls', 'xlsx', 'ods', 'csv', 'tsv'].indexOf(ext) >= 0) return '📊';
+      if (['epub', 'mobi', 'azw3'].indexOf(ext) >= 0) return '📚';
+      return '📄';
     }
 
     function startListing() {
-      var url = document.getElementById('spreadsheetUrl').value.trim();
+      var url = document.getElementById('folderUrl').value.trim();
       if (!url) {
-        addLog('❌ Cole o link de uma planilha do Google.', 'error');
+        addLog('❌ Cole o link ou ID da pasta do Google Drive.', 'error');
         return;
       }
       appState = 'listing';
       setBusy('listing');
-      addLog('📂 Iniciando listagem...', 'info');
+      addLog('📂 Conectando à pasta...', 'info');
+
+      // Feedback visual reativo
+      showActiveCard('📁', 'Google Drive', 'Conectando à pasta...', 1);
+      document.getElementById('statProcessed').textContent = '0';
+      document.getElementById('statSkipped').textContent = '0';
+      document.getElementById('statTime').textContent = '~--:--';
 
       google.script.run
         .withSuccessHandler(function(result) {
           addLog(result.message, getLogClass(result.message));
           if (!result.done) {
+            showActiveCard('📁', 'Google Drive', 'Listando arquivos recursivos...', 2);
             nextListingStep();
           } else {
             setIdle();
             appState = 'idle';
+            document.getElementById('activeCard').style.display = 'none';
+            refreshTableData();
           }
         })
         .withFailureHandler(function(err) {
           addLog('❌ ' + err.message, 'error');
           setIdle();
           appState = 'idle';
+          document.getElementById('activeCard').style.display = 'none';
         })
         .startListingSession(url);
     }
@@ -434,26 +1063,53 @@
       google.script.run
         .withSuccessHandler(function(result) {
           addLog(result.message, getLogClass(result.message));
+          
+          document.getElementById('statProcessed').textContent = result.processedCount;
+          document.getElementById('statSkipped').textContent = result.folderCount;
+          
           if (!result.done) {
+            showActiveCard('📁', 'Google Drive', 'Analisando pasta ' + result.folderCount + '...', 2);
             nextListingStep();
           } else {
             setIdle();
             appState = 'idle';
+            showActiveCard('✓', 'Concluído', 'Varredura finalizada com sucesso!', 4);
+            updateStepper(5);
+            refreshTableData();
+            setTimeout(function() {
+              if (appState === 'idle') document.getElementById('activeCard').style.display = 'none';
+            }, 5000);
           }
         })
         .withFailureHandler(function(err) {
           addLog('❌ ' + err.message, 'error');
           setIdle();
           appState = 'idle';
+          document.getElementById('activeCard').style.display = 'none';
         })
         .listingStep();
     }
 
     function startDescription() {
       var settings = getActiveSettings();
+      var forceReprocess = document.getElementById('chkForce').checked;
+      
+      // Coletar linhas selecionadas na tabela interativa
+      var checkedCheckboxes = document.querySelectorAll('.row-checkbox:checked');
+      var selectedRowNums = [];
+      checkedCheckboxes.forEach(function(cb) {
+        selectedRowNums.push(parseInt(cb.dataset.rownum));
+      });
+
       appState = 'processing';
       setBusy('processing');
-      addLog('🤖 Verificando planilha...', 'info');
+      addLog('🤖 Verificando planilha de metadados...', 'info');
+
+      startTime = Date.now();
+      document.getElementById('statProcessed').textContent = '0';
+      document.getElementById('statSkipped').textContent = '0';
+      document.getElementById('statTime').textContent = 'Calculando...';
+      showActiveCard('🤖', 'Fila de Metadados', 'Verificando planilha...', 1);
 
       google.script.run
         .withSuccessHandler(function(imgInfo) {
@@ -472,20 +1128,27 @@
               addLog(initResult.message, getLogClass(initResult.message));
               if (!initResult.done) {
                 updateProgress(0, initResult.total);
-                if (initResult.analyzingNext) addLog('🔍 Analisando: ' + initResult.analyzingNext + '...', 'info');
+                if (initResult.analyzingNext) {
+                  addLog('🔍 Analisando: ' + initResult.analyzingNext + '...', 'info');
+                  var icon = getFileIcon(initResult.analyzingNext);
+                  showActiveCard(icon, initResult.analyzingNext, 'Lendo conteúdo...', 2);
+                }
                 nextProcessingStep(settings, initResult.total);
               } else {
                 setIdle();
                 appState = 'idle';
                 updateProgress(0, 0);
+                document.getElementById('activeCard').style.display = 'none';
+                refreshTableData();
               }
             })
             .withFailureHandler(function(err) {
               addLog('❌ ' + err.message, 'error');
               setIdle();
               appState = 'idle';
+              document.getElementById('activeCard').style.display = 'none';
             })
-            .startProcessingSession();
+            .startProcessingSession(forceReprocess, selectedRowNums);
         })
         .withFailureHandler(function(err) {
           addLog('⚠ Aviso: ' + err.message, 'warning');
@@ -494,19 +1157,26 @@
               addLog(initResult.message, getLogClass(initResult.message));
               if (!initResult.done) {
                 updateProgress(0, initResult.total);
-                if (initResult.analyzingNext) addLog('🔍 Analisando: ' + initResult.analyzingNext + '...', 'info');
+                if (initResult.analyzingNext) {
+                  addLog('🔍 Analisando: ' + initResult.analyzingNext + '...', 'info');
+                  var icon = getFileIcon(initResult.analyzingNext);
+                  showActiveCard(icon, initResult.analyzingNext, 'Lendo conteúdo...', 2);
+                }
                 nextProcessingStep(settings, initResult.total);
               } else {
                 setIdle();
                 appState = 'idle';
+                document.getElementById('activeCard').style.display = 'none';
+                refreshTableData();
               }
             })
             .withFailureHandler(function(err2) {
               addLog('❌ ' + err2.message, 'error');
               setIdle();
               appState = 'idle';
+              document.getElementById('activeCard').style.display = 'none';
             })
-            .startProcessingSession();
+            .startProcessingSession(forceReprocess, selectedRowNums);
         })
         .hasImages();
     }
@@ -514,31 +1184,70 @@
     function nextProcessingStep(settings, total) {
       if (appState !== 'processing') return;
       var settingsJson = JSON.stringify(settings);
+      
+      // Animar stepper indicando análise da IA ativa
+      var activeName = document.getElementById('activeName').textContent;
+      var icon = getFileIcon(activeName);
+      showActiveCard(icon, activeName, 'Consultando IA (Dublin Core)...', 3);
+
       google.script.run
         .withSuccessHandler(function(result) {
-          // Render all messages from this step
+          // Gravação finalizada
+          showActiveCard(icon, activeName, 'Gravando metadados...', 4);
+          
           var msgs = result.messages || [{ text: result.message || '', type: getLogClass(result.message || '') }];
           msgs.forEach(function(m) { addLog(m.text, m.type); });
-
-          // Pre-announce next file before the AI call
-          if (!result.done && result.analyzingNext) {
-            addLog('🔍 Analisando: ' + result.analyzingNext + '...', 'info');
-          }
 
           var done = result.processedCount + result.skippedCount;
           updateProgress(done, result.total || total);
 
+          document.getElementById('statProcessed').textContent = result.processedCount;
+          document.getElementById('statSkipped').textContent = result.skippedCount;
+
+          // Cálculo dinâmico do tempo restante
+          if (result.processedCount > 0 && done < total) {
+            var elapsedMs = Date.now() - startTime;
+            var avgMsPerFile = elapsedMs / result.processedCount;
+            var remainingFiles = total - done;
+            var estRemainingSecs = Math.round((avgMsPerFile * remainingFiles) / 1000);
+            
+            if (estRemainingSecs > 0) {
+              var mins = Math.floor(estRemainingSecs / 60);
+              var secs = estRemainingSecs % 60;
+              document.getElementById('statTime').textContent = mins + 'm ' + secs + 's';
+            } else {
+              document.getElementById('statTime').textContent = 'Poucos seg';
+            }
+          }
+
           if (!result.done) {
+            if (result.analyzingNext) {
+              addLog('🔍 Analisando: ' + result.analyzingNext + '...', 'info');
+              var nextIcon = getFileIcon(result.analyzingNext);
+              setTimeout(function() {
+                if (appState === 'processing') {
+                  showActiveCard(nextIcon, result.analyzingNext, 'Lendo conteúdo...', 2);
+                }
+              }, 400);
+            }
             nextProcessingStep(settings, result.total || total);
           } else {
             setIdle();
             appState = 'idle';
+            document.getElementById('statTime').textContent = '0m 0s';
+            showActiveCard('✓', 'Processamento Finalizado', 'Concluído com sucesso!', 4);
+            updateStepper(5);
+            refreshTableData();
+            setTimeout(function() {
+              if (appState === 'idle') document.getElementById('activeCard').style.display = 'none';
+            }, 6000);
           }
         })
         .withFailureHandler(function(err) {
           addLog('❌ ' + err.message, 'error');
           setIdle();
           appState = 'idle';
+          document.getElementById('activeCard').style.display = 'none';
         })
         .processingStep(settingsJson);
     }
@@ -550,8 +1259,12 @@
           .withSuccessHandler(function(msg) {
             addLog('✅ ' + msg, 'success');
             setIdle();
+            document.getElementById('activeCard').style.display = 'none';
           })
-          .withFailureHandler(function() { setIdle(); })
+          .withFailureHandler(function() { 
+            setIdle(); 
+            document.getElementById('activeCard').style.display = 'none';
+          })
           .cancelListing();
       } else if (appState === 'processing') {
         appState = 'idle';
@@ -559,15 +1272,20 @@
           .withSuccessHandler(function(msg) {
             addLog('✅ ' + msg, 'success');
             setIdle();
+            document.getElementById('activeCard').style.display = 'none';
+            refreshTableData();
           })
-          .withFailureHandler(function() { setIdle(); })
+          .withFailureHandler(function() { 
+            setIdle(); 
+            document.getElementById('activeCard').style.display = 'none';
+          })
           .cancelProcessing();
       }
     }
 
     function exportCsv() {
       setBusy('export');
-      addLog('📥 Gerando metadata.csv...', 'info');
+      addLog('📥 Gerando metadata.csv na pasta...', 'info');
       google.script.run
         .withSuccessHandler(function(fileUrl) {
           setIdle();
@@ -603,7 +1321,7 @@
       document.getElementById('btnDescribe').disabled = true;
       document.getElementById('btnExport').disabled = true;
       if (action !== 'export') {
-        document.getElementById('btnCancel').style.display = 'block';
+        document.getElementById('btnCancel').style.display = 'flex';
       }
     }
 
@@ -631,9 +1349,145 @@
       count.textContent = current + '/' + total;
     }
 
+    /* ==========================================
+       LÓGICA DA TABELA INTERATIVA (FRONTEND)
+       ========================================== */
+
+    function refreshTableData() {
+      var tableBody = document.getElementById('tableBody');
+      tableBody.innerHTML = '<tr><td colspan="6" class="no-data-msg">🔄 Carregando dados da planilha...</td></tr>';
+      
+      google.script.run
+        .withSuccessHandler(function(rows) {
+          tableRowsData = rows;
+          renderRows(rows);
+        })
+        .withFailureHandler(function(err) {
+          tableBody.innerHTML = '<tr><td colspan="6" class="no-data-msg" style="color: #ef4444;">❌ Falha ao carregar dados: ' + err.message + '</td></tr>';
+        })
+        .getSpreadsheetRows();
+    }
+
+    function renderRows(rows) {
+      var tableBody = document.getElementById('tableBody');
+      tableBody.innerHTML = '';
+      
+      if (!rows || rows.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="6" class="no-data-msg">Nenhum documento listado na planilha. Conecte uma pasta acima e clique em "Listar documentos".</td></tr>';
+        document.getElementById('selectionStatus').textContent = '0 arquivo(s) selecionado(s) de 0 total.';
+        return;
+      }
+
+      rows.forEach(function(row) {
+        var tr = document.createElement('tr');
+        tr.id = 'row-' + row.rowNum;
+
+        // Checkbox td
+        var tdCheck = document.createElement('td');
+        var cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.className = 'row-checkbox';
+        cb.dataset.rownum = row.rowNum;
+        cb.onchange = updateSelectionCount;
+        tdCheck.appendChild(cb);
+        tr.appendChild(tdCheck);
+
+        // Repositório td
+        var tdRep = document.createElement('td');
+        var repBadge = document.createElement('span');
+        repBadge.className = 'rep-badge ' + (row.repository === 'SIM' ? 'rep-sim' : 'rep-nao');
+        repBadge.textContent = row.repository === 'SIM' ? 'SIM' : 'NÃO';
+        tdRep.appendChild(repBadge);
+        tr.appendChild(tdRep);
+
+        // Nome do arquivo td
+        var tdFile = document.createElement('td');
+        var icon = getFileIcon(row.filename);
+        tdFile.innerHTML = '<span style="margin-right: 6px;">' + icon + '</span>' + row.filename;
+        tdFile.title = row.filename;
+        tr.appendChild(tdFile);
+
+        // Status td
+        var tdStatus = document.createElement('td');
+        var statusBadge = document.createElement('span');
+        var statusClass = 'status-pendente';
+        if (row.status === 'Concluído') statusClass = 'status-concluido';
+        if (row.status === 'Ignorado') statusClass = 'status-ignorado';
+        statusBadge.className = 'status-badge ' + statusClass;
+        statusBadge.textContent = row.status;
+        tdStatus.appendChild(statusBadge);
+        tr.appendChild(tdStatus);
+
+        // Título td
+        var tdTitle = document.createElement('td');
+        tdTitle.textContent = row.title || '-';
+        tdTitle.title = row.title || '';
+        tr.appendChild(tdTitle);
+
+        // Data td
+        var tdDate = document.createElement('td');
+        tdDate.textContent = row.date || '-';
+        tr.appendChild(tdDate);
+
+        tableBody.appendChild(tr);
+      });
+
+      document.getElementById('selectAllCheckbox').checked = false;
+      updateSelectionCount();
+    }
+
+    function filterTable() {
+      var query = document.getElementById('tableSearch').value.toLowerCase().trim();
+      var filtered = tableRowsData.filter(function(row) {
+        return row.filename.toLowerCase().indexOf(query) !== -1 ||
+               (row.title && row.title.toLowerCase().indexOf(query) !== -1);
+      });
+      renderRows(filtered);
+    }
+
+    function toggleSelectAll(master) {
+      var checkboxes = document.querySelectorAll('.row-checkbox');
+      checkboxes.forEach(function(cb) {
+        cb.checked = master.checked;
+      });
+      updateSelectionCount();
+    }
+
+    function updateSelectionCount() {
+      var total = tableRowsData.length;
+      var selected = document.querySelectorAll('.row-checkbox:checked').length;
+      document.getElementById('selectionStatus').textContent = selected + ' arquivo(s) selecionado(s) de ' + total + ' total.';
+    }
+
+    function bulkToggleRepository(value) {
+      var checkedCheckboxes = document.querySelectorAll('.row-checkbox:checked');
+      if (checkedCheckboxes.length === 0) {
+        addLog('⚠ Selecione pelo menos um arquivo na tabela para marcar em lote.', 'warning');
+        return;
+      }
+
+      var rowNums = [];
+      checkedCheckboxes.forEach(function(cb) {
+        rowNums.push(parseInt(cb.dataset.rownum));
+      });
+
+      addLog('📥 Atualizando ' + rowNums.length + ' linha(s) na planilha...', 'info');
+      
+      google.script.run
+        .withSuccessHandler(function(msg) {
+          addLog('✅ ' + msg, 'success');
+          refreshTableData();
+        })
+        .withFailureHandler(function(err) {
+          addLog('❌ ' + err.message, 'error');
+        })
+        .updateRowsRepository(rowNums, value);
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
       loadSettings();
       updateProviderUI();
+      refreshTableData();
     });
   </script>
 

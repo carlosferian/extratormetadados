@@ -21,19 +21,61 @@ function getFileContent(file, mimeType) {
     'application/json', 'application/xml'
   ];
 
+  let fileSize = 0;
+  try {
+    fileSize = file.getSize();
+  } catch (e) {
+    try {
+      fileSize = file.getBlob().getBytes().length;
+    } catch (_) {}
+  }
+
+  // Se a imagem for maior que 10MB, processamos sem conteúdo binário (type: none) para evitar estouro de payload, 
+  // permitindo que a IA deduza metadados a partir do nome rico do arquivo.
   if (imageTypes.includes(mimeType)) {
-    const blob = file.getBlob();
-    const base64 = Utilities.base64Encode(blob.getBytes());
-    return { type: 'image', mimeType, base64 };
+    if (fileSize > 10 * 1024 * 1024) {
+      return { type: 'none' };
+    }
+    try {
+      const blob = file.getBlob();
+      const base64 = Utilities.base64Encode(blob.getBytes());
+      return { type: 'image', mimeType, base64 };
+    } catch (e) {
+      return { type: 'none' };
+    }
   }
 
   if (mimeType === 'application/pdf') {
-    const blob = file.getBlob();
-    const base64 = Utilities.base64Encode(blob.getBytes());
-    return { type: 'pdf', mimeType, base64 };
+    // Se o PDF for muito grande (maior que 20MB, que é o limite do Drive OCR), processamos por nome de arquivo
+    if (fileSize > 20 * 1024 * 1024) {
+      return { type: 'none' };
+    }
+    
+    // Entre 8MB e 20MB, convertemos para texto (OCR) de forma segura
+    if (fileSize > 8 * 1024 * 1024) {
+      const pdfText = extractPdfText(file);
+      if (pdfText) {
+        return { type: 'text', content: pdfText };
+      }
+      return { type: 'none' };
+    }
+    
+    try {
+      const blob = file.getBlob();
+      const base64 = Utilities.base64Encode(blob.getBytes());
+      return { type: 'pdf', mimeType, base64 };
+    } catch (e) {
+      // Fallback seguro de OCR se der estouro de memória no getBytes()
+      const pdfText = extractPdfText(file);
+      if (pdfText) {
+        return { type: 'text', content: pdfText };
+      }
+      return { type: 'none' };
+    }
   }
 
   if (mimeType === 'application/vnd.google-apps.document') {
+    if (fileSize > 20 * 1024 * 1024) return { type: 'none' };
     try {
       const text = file.getAs('text/plain').getDataAsString().substring(0, 15000);
       return { type: 'text', content: text };
@@ -43,6 +85,7 @@ function getFileContent(file, mimeType) {
   }
 
   if (textTypes.some(t => mimeType === t) || mimeType.startsWith('text/')) {
+    if (fileSize > 20 * 1024 * 1024) return { type: 'none' };
     try {
       const text = file.getBlob().getDataAsString().substring(0, 15000);
       return { type: 'text', content: text };
@@ -84,10 +127,9 @@ function callAI(settings, prompt, fileId, mimeType) {
     return 'SKIP_LINE';
   }
 
-  const blob = file.getBlob();
-  if (blob.getBytes().length > 10 * 1024 * 1024) {
-    return 'SKIP_LINE';
-  }
+  // Removido o filtro rígido de tamanho que descartava o arquivo. 
+  // Arquivos muito grandes ou não legíveis passarão para getFileContent e retornarão tipo 'none',
+  // permitindo que a IA crie metadados perfeitos usando as informações ricas contidas no nome do arquivo!
 
   const provider = settings.provider || 'gemini';
 
@@ -102,16 +144,20 @@ function callAI(settings, prompt, fileId, mimeType) {
 function callGemini(settings, prompt, file, mimeType, retries) {
   if (retries === undefined) retries = 3;
   const apiKey = settings.geminiApiKey;
-  const model = settings.geminiModel || 'gemini-2.0-flash';
-  const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent?key=' + apiKey;
+  let model = settings.geminiModel || 'gemini-2.5-flash';
+  // Intercept and auto-upgrade legacy models to gemini-2.5-flash
+  if (model.indexOf('gemini-1.5-flash') !== -1 || model.indexOf('gemini-2.0-flash') !== -1) {
+    model = 'gemini-2.5-flash';
+  }
+  const url = 'https://generativelanguage.googleapis.com/v1/models/' + model + ':generateContent?key=' + apiKey;
 
   const content = getFileContent(file, mimeType);
   const parts = [];
 
   if (content.type === 'image' || content.type === 'pdf') {
     parts.push({
-      inline_data: {
-        mime_type: content.mimeType,
+      inlineData: {
+        mimeType: content.mimeType,
         data: content.base64
       }
     });
@@ -141,10 +187,14 @@ function callGemini(settings, prompt, file, mimeType, retries) {
     }
 
     if (code === 400) {
-      const json = JSON.parse(body);
-      const status = (json.error && json.error.status) || '';
-      if (status === 'INVALID_ARGUMENT') return 'SKIP_LINE';
-      return 'SKIP_LINE';
+      let errMsg = "Erro 400 (Bad Request) na API Gemini";
+      try {
+        const json = JSON.parse(body);
+        if (json.error && json.error.message) {
+          errMsg += ": " + json.error.message;
+        }
+      } catch (e) {}
+      throw new Error(errMsg);
     }
 
     if (code === 500 && attempt < retries - 1) {
@@ -152,10 +202,17 @@ function callGemini(settings, prompt, file, mimeType, retries) {
       continue;
     }
 
-    return 'SKIP_LINE';
+    let errMsg = "Erro " + code + " na API Gemini";
+    try {
+      const json = JSON.parse(body);
+      if (json.error && json.error.message) {
+        errMsg += ": " + json.error.message;
+      }
+    } catch (e) {}
+    throw new Error(errMsg);
   }
 
-  return 'SKIP_LINE';
+  throw new Error("Falha na chamada da API Gemini após várias tentativas.");
 }
 
 function callOpenAI(settings, prompt, file, mimeType) {
@@ -194,10 +251,22 @@ function callOpenAI(settings, prompt, file, mimeType) {
     muteHttpExceptions: true
   });
 
-  if (response.getResponseCode() !== 200) return 'SKIP_LINE';
+  const code = response.getResponseCode();
+  const body = response.getContentText();
 
-  const json = JSON.parse(response.getContentText());
-  return json.choices[0].message.content;
+  if (code === 200) {
+    const json = JSON.parse(body);
+    return json.choices[0].message.content;
+  }
+
+  let errMsg = "Erro " + code + " na OpenAI";
+  try {
+    const json = JSON.parse(body);
+    if (json.error && json.error.message) {
+      errMsg += ": " + json.error.message;
+    }
+  } catch (e) {}
+  throw new Error(errMsg);
 }
 
 function callOpenRouter(settings, prompt, file, mimeType) {
@@ -240,10 +309,22 @@ function callOpenRouter(settings, prompt, file, mimeType) {
     muteHttpExceptions: true
   });
 
-  if (response.getResponseCode() !== 200) return 'SKIP_LINE';
+  const code = response.getResponseCode();
+  const body = response.getContentText();
 
-  const json = JSON.parse(response.getContentText());
-  return json.choices[0].message.content;
+  if (code === 200) {
+    const json = JSON.parse(body);
+    return json.choices[0].message.content;
+  }
+
+  let errMsg = "Erro " + code + " no OpenRouter";
+  try {
+    const json = JSON.parse(body);
+    if (json.error && json.error.message) {
+      errMsg += ": " + json.error.message;
+    }
+  } catch (e) {}
+  throw new Error(errMsg);
 }
 
 function callOllama(settings, prompt, file, mimeType) {
@@ -267,8 +348,13 @@ function callOllama(settings, prompt, file, mimeType) {
     muteHttpExceptions: true
   });
 
-  if (response.getResponseCode() !== 200) return 'SKIP_LINE';
+  const code = response.getResponseCode();
+  const body = response.getContentText();
 
-  const json = JSON.parse(response.getContentText());
-  return json.response || 'SKIP_LINE';
+  if (code === 200) {
+    const json = JSON.parse(body);
+    return json.response || 'SKIP_LINE';
+  }
+
+  throw new Error("Erro " + code + " no Ollama: " + body);
 }

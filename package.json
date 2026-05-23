@@ -3,9 +3,12 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "deploy": "node deploy.js"
+    "deploy": "clasp push"
   },
   "dependencies": {
     "googleapis": "^144.0.0"
+  },
+  "devDependencies": {
+    "@google/clasp": "^2.5.2"
   }
 }

@@ -6,7 +6,35 @@ function initListing(folderId) {
     throw new Error('Não foi possível acessar a pasta. Verifique as permissões: ' + e.message);
   }
 
-  const sheet = SpreadsheetApp.getActiveSheet();
+  // Buscar uma planilha do Google chamada "metadata" nesta pasta
+  const files = rootFolder.getFilesByName('metadata');
+  let metadataFile = null;
+  while (files.hasNext()) {
+    const f = files.next();
+    if (f.getMimeType() === MimeType.GOOGLE_SHEETS) {
+      metadataFile = f;
+      break;
+    }
+  }
+
+  let ss;
+  if (metadataFile) {
+    ss = SpreadsheetApp.openById(metadataFile.getId());
+  } else {
+    // Criar nova planilha
+    ss = SpreadsheetApp.create('metadata');
+    // Mover para a pasta alvo
+    DriveApp.getFileById(ss.getId()).moveTo(rootFolder);
+  }
+
+  // Salvar as referências no PropertiesService do usuário
+  const props = PropertiesService.getUserProperties();
+  props.setProperties({
+    'activeSpreadsheetId': ss.getId(),
+    'activeFolderId': folderId
+  });
+
+  const sheet = ss.getActiveSheet();
   ensureHeaders(sheet);
 
   const state = {
@@ -19,7 +47,7 @@ function initListing(folderId) {
 
   return {
     done: false,
-    message: '📂 Iniciando: ' + rootFolder.getName(),
+    message: '📂 Iniciando na pasta: ' + rootFolder.getName(),
     processedCount: 0,
     folderCount: 0
   };
@@ -82,7 +110,7 @@ function listingStep() {
   }
   state.folderQueue = newSubfolders.concat(queue);
 
-  const sheet = SpreadsheetApp.getActiveSheet();
+  const sheet = getActiveMetadataSheet();
   const lastRow = sheet.getLastRow();
   const existingIds = new Set();
   if (lastRow > 1) {
@@ -91,32 +119,32 @@ function listingStep() {
   }
 
   let added = 0;
+  const activeSpreadsheetId = PropertiesService.getUserProperties().getProperty('activeSpreadsheetId');
 
-  if (folderPath !== '') {
-    const files = folder.getFiles();
-    while (files.hasNext()) {
-      const file = files.next();
-      const fileId = file.getId();
+  const files = folder.getFiles();
+  while (files.hasNext()) {
+    const file = files.next();
+    const fileId = file.getId();
 
-      if (existingIds.has(fileId)) continue;
+    if (fileId === activeSpreadsheetId) continue;
+    if (existingIds.has(fileId)) continue;
 
-      let owner;
-      try { owner = file.getOwner(); } catch (_) { owner = null; }
+    let owner;
+    try { owner = file.getOwner(); } catch (_) { owner = null; }
 
-      const newRow = new Array(REQUIRED_HEADERS.length).fill('');
-      newRow[COL.source] = file.getUrl();
-      newRow[COL.creator] = owner ? owner.getName() : 'Desconhecido';
-      newRow[COL.format] = file.getMimeType();
-      newRow[COL.identifier] = fileId;
-      newRow[COL.filename] = folderPath + '/' + file.getName();
+    const newRow = new Array(REQUIRED_HEADERS.length).fill('');
+    newRow[COL.source] = file.getUrl();
+    newRow[COL.creator] = owner ? owner.getName() : 'Desconhecido';
+    newRow[COL.format] = file.getMimeType();
+    newRow[COL.identifier] = fileId;
+    newRow[COL.filename] = folderPath ? folderPath + '/' + file.getName() : file.getName();
 
-      sheet.getRange(sheet.getLastRow() + 1, 1, 1, newRow.length).setValues([newRow]);
-      existingIds.add(fileId);
-      added++;
-      state.processedCount++;
-    }
-    SpreadsheetApp.flush();
+    sheet.getRange(sheet.getLastRow() + 1, 1, 1, newRow.length).setValues([newRow]);
+    existingIds.add(fileId);
+    added++;
+    state.processedCount++;
   }
+  SpreadsheetApp.flush();
 
   try {
     cache.put('listingState', JSON.stringify(state), 21600);

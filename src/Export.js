@@ -1,5 +1,5 @@
 function exportCsvForArchivematica() {
-  const sheet = SpreadsheetApp.getActiveSheet();
+  const sheet = getActiveMetadataSheet();
   const data = sheet.getDataRange().getValues();
 
   if (data.length <= 1) {
@@ -19,6 +19,9 @@ function exportCsvForArchivematica() {
 
   for (let i = 1; i < data.length; i++) {
     const row = data[i];
+    const repository = (row[COL.repository] || '').toString().trim().toUpperCase();
+    if (repository !== 'SIM') continue;
+
     const rawFilename = (row[COL.filename] || "").toString().trim();
     if (!rawFilename) continue;
 
@@ -58,9 +61,21 @@ function exportCsvForArchivematica() {
     }).join(",")
   ).join("\n");
 
-  const folder = DriveApp.getFileById(
-    SpreadsheetApp.getActiveSpreadsheet().getId()
-  ).getParents().next();
+  const props = PropertiesService.getUserProperties();
+  const folderId = props.getProperty('activeFolderId');
+  let folder;
+  if (folderId) {
+    try {
+      folder = DriveApp.getFolderById(folderId);
+    } catch (e) {
+      console.log("Pasta de metadados não encontrada pelo ID: " + e.message);
+    }
+  }
+  if (!folder) {
+    folder = DriveApp.getFileById(
+      getActiveMetadataSpreadsheet().getId()
+    ).getParents().next();
+  }
 
   // Replace existing metadata.csv if present
   const existing = folder.getFilesByName("metadata.csv");
