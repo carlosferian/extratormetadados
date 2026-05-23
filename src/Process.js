@@ -174,16 +174,21 @@ function processingStep(settingsJson) {
   const list = extractListFromResponse(response);
   const forceReprocess = !!state.forceReprocess;
 
-  if (list.length === 5) {
+  if (list[0]) {
     const range = sheet.getRange(rowNumber, 1, 1, REQUIRED_HEADERS.length);
     const currentValues = range.getValues()[0];
 
-    if (forceReprocess || !currentValues[COL.title]) currentValues[COL.title] = list[0].trim();
-    if (forceReprocess || !currentValues[COL.subject1]) currentValues[COL.subject1] = list[1].trim();
-    if (forceReprocess || !currentValues[COL.subject2]) currentValues[COL.subject2] = list[2].trim();
-    if (forceReprocess || !currentValues[COL.description]) currentValues[COL.description] = list[3].trim();
-    if (forceReprocess || !currentValues[COL.date]) currentValues[COL.date] = list[4].trim();
+    if (list[0] && (forceReprocess || !currentValues[COL.title]))       currentValues[COL.title]       = list[0];
+    if (list[1] && (forceReprocess || !currentValues[COL.subject1]))    currentValues[COL.subject1]    = list[1];
+    if (list[2] && (forceReprocess || !currentValues[COL.subject2]))    currentValues[COL.subject2]    = list[2];
+    if (list[3] && (forceReprocess || !currentValues[COL.description])) currentValues[COL.description] = list[3];
+
     currentValues[COL.contributor] = provider + ':' + model;
+
+    const processNum = list[4] && list[4] !== 'N/A' ? list[4] : '';
+    if (processNum && (forceReprocess || !currentValues[COL.processId])) {
+      currentValues[COL.processId] = processNum;
+    }
 
     range.setValues([currentValues]);
     SpreadsheetApp.flush();
@@ -194,14 +199,15 @@ function processingStep(settingsJson) {
 
   cache.put('processingState', JSON.stringify(state), 21600);
 
-  const msgs = list.length === 5
+  const processNum = list[4] && list[4] !== 'N/A' ? list[4] : '';
+  const msgs = list[0]
     ? [
         { text: '✓ ' + shortName, type: 'success' },
-        { text: '  📌 ' + list[0].trim(), type: 'normal' },
-        { text: '  📅 ' + list[1].trim(), type: 'normal' },
-        { text: '  🏷️ ' + list[2].trim(), type: 'normal' },
-        { text: '  📆 ' + list[4].trim(), type: 'normal' }
-      ]
+        list[0] ? { text: '  📌 ' + list[0], type: 'normal' } : null,
+        list[1] ? { text: '  📅 ' + list[1], type: 'normal' } : null,
+        list[2] ? { text: '  🏷️ ' + list[2], type: 'normal' } : null,
+        processNum ? { text: '  📎 Processo: ' + processNum, type: 'info' } : null
+      ].filter(Boolean)
     : [{ text: '⚠ Resposta inválida da IA: ' + shortName, type: 'warning' }];
 
   return {
@@ -228,18 +234,45 @@ function buildPrompt(fileName, mimeType) {
     instruction = 'Analise o conteúdo textual do arquivo para encontrar datas citadas e identifique seu tipo documental, contexto eleitoral ou institucional e informações relevantes.';
   }
 
-  const format = 'Responda APENAS com uma lista no formato: [Título; Evento/Assunto; Palavras-chave; Descrição; Data]\n\nExemplo: [Ata de reunião do TRE-PR; Eleições 2024; eleições, ata, reunião; Documento que registra as deliberações da reunião ordinária do Tribunal Regional Eleitoral do Paraná referente ao pleito de 2024; 2024-05-15]\n\nRegra para a Data: Extraia a data exata do documento a partir do texto digitalizado, cabeçalhos ou rodapés (no formato AAAA-MM-DD, AAAA-MM ou AAAA). Se a data não puder ser extraída nem estimada de forma confiável pelo contexto ou nome do arquivo, preencha o campo de data com "s.d." (sem data).';
+  const format = [
+    'Responda APENAS com uma lista no formato:',
+    '[Título; Evento/Assunto; Palavras-chave; Descrição; Número de processo ou protocolo]',
+    '',
+    'Regras:',
+    '- Se o documento for um processo administrativo, judicial ou eleitoral e contiver número de processo, autuação ou protocolo, extraia-o exatamente no 5º campo (ex: 0001234-56.2024.6.16.0000).',
+    '- Se não houver número de processo ou protocolo identificável, coloque "N/A" no 5º campo.',
+    '',
+    'Exemplo com processo:',
+    '[Ata de Audiência TRE-PR; Audiência Processual 2024; eleições, audiência, processo; Documento que registra audiência do processo eleitoral.; 0001234-56.2024.6.16.0000]',
+    '',
+    'Exemplo sem processo:',
+    '[Cerimônia de Posse 2024; Posse de Magistrados; posse, magistrado, TRE-PR; Foto da cerimônia de posse de novos magistrados no TRE-PR.; N/A]'
+  ].join('\n');
 
   return context + '\n\n' + instruction + '\n\nNome do arquivo: ' + fileName + '\n\n' + format;
 }
 
 function extractListFromResponse(response) {
   if (!response) return [];
-  const match = response.match(/\[([^\]]+)\]/);
-  if (!match) return [];
-  const parts = match[1].split(';');
-  if (parts.length !== 5) return [];
-  return parts;
+
+  // Prefer text inside [...], fall back to full response
+  const bracketMatch = response.match(/\[([^\]]+)\]/s);
+  const candidates = bracketMatch ? [bracketMatch[1], response] : [response];
+
+  // Try separators in preference order: semicolon → pipe → newline
+  const separators = [';', '|', /\r?\n+/];
+
+  for (const text of candidates) {
+    for (const sep of separators) {
+      const parts = text.split(sep).map(p => p.trim()).filter(Boolean);
+      if (parts.length >= 3) {
+        while (parts.length < 5) parts.push('');
+        return parts.slice(0, 5);
+      }
+    }
+  }
+
+  return [];
 }
 
 function cancelProcessing() {

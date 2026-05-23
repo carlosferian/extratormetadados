@@ -71,8 +71,27 @@ extratormetadados/
 | 15 | dc.relation | (preenchimento manual) |
 | 16 | dc.coverage | (preenchimento manual) |
 | 17 | dc.rights | (preenchimento manual) |
+| 18 | dcterms:provenance | Agente de digitalização (empresa/pessoa) ou "Nato-digital" — preenchimento manual |
+| 19 | dc.identifier | Número de processo/protocolo jurídico-administrativo — extraído pela IA quando detectado |
 
 O `COL` map em `Spreadsheet.js` é a fonte da verdade para todos os índices.
+
+### Padrão Archivematica (SIP)
+
+Estrutura obrigatória do Submission Information Package:
+```
+SIP/
+├── objects/          ← arquivos a preservar (paths refletidos no filename do CSV)
+├── metadata/
+│   └── metadata.csv  ← gerado pelo Exportar CSV
+└── logs/             ← preenchido pelo Archivematica durante ingestão
+```
+
+O `metadata.csv` suporta 15 elementos Dublin Core básicos (`dc.`) e Dublin Core Terms (`dcterms:`). Elementos repetidos (ex: `dc.subject` × 3, `dc.identifier` × 2) são válidos e tratados como valores múltiplos. Campos não-DC são aceitos com `MDTYPE="OTHER"`.
+
+**Decisão de campos:**
+- `dcterms:provenance` — cadeia de custódia/digitalizador; semanticamente correto para "quem digitalizou" (Dublin Core Terms)
+- Segundo `dc.identifier` — número de processo/protocolo; Dublin Core permite múltiplos identificadores por recurso
 
 ---
 
