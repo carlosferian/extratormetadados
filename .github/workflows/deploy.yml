@@ -26,7 +26,40 @@ jobs:
       - name: Create clasp auth file
         env:
           CLASPRC_JSON: ${{ secrets.CLASPRC_JSON }}
-        run: echo "$CLASPRC_JSON" > ~/.clasprc.json
+        run: |
+          printf '%s' "$CLASPRC_JSON" | node -e "
+            let raw = '';
+            process.stdin.on('data', d => raw += d);
+            process.stdin.on('end', () => {
+              const src = JSON.parse(raw);
+              let out;
+              if (src.tokens && src.tokens.default) {
+                const t = src.tokens.default;
+                out = {
+                  token: {
+                    access_token: t.access_token,
+                    refresh_token: t.refresh_token,
+                    scope: t.scope || '',
+                    token_type: t.token_type || 'Bearer',
+                    expiry_date: t.expiry_date,
+                    id_token: t.id_token
+                  },
+                  oauth2ClientSettings: {
+                    clientId: t.client_id,
+                    clientSecret: t.client_secret,
+                    redirectUri: 'http://localhost'
+                  },
+                  isLocalCreds: false
+                };
+              } else {
+                out = src;
+              }
+              require('fs').writeFileSync(
+                require('os').homedir() + '/.clasprc.json',
+                JSON.stringify(out)
+              );
+            });
+          "
 
       - name: Deploy to Apps Script
         run: npx @google/clasp push --force
