@@ -174,16 +174,21 @@ function processingStep(settingsJson) {
   const list = extractListFromResponse(response);
   const forceReprocess = !!state.forceReprocess;
 
-  if (list.length === 5) {
+  if (list.length >= 4) {
     const range = sheet.getRange(rowNumber, 1, 1, REQUIRED_HEADERS.length);
     const currentValues = range.getValues()[0];
 
-    if (forceReprocess || !currentValues[COL.title]) currentValues[COL.title] = list[0].trim();
-    if (forceReprocess || !currentValues[COL.subject1]) currentValues[COL.subject1] = list[1].trim();
-    if (forceReprocess || !currentValues[COL.subject2]) currentValues[COL.subject2] = list[2].trim();
+    if (forceReprocess || !currentValues[COL.title])       currentValues[COL.title]       = list[0].trim();
+    if (forceReprocess || !currentValues[COL.subject1])    currentValues[COL.subject1]    = list[1].trim();
+    if (forceReprocess || !currentValues[COL.subject2])    currentValues[COL.subject2]    = list[2].trim();
     if (forceReprocess || !currentValues[COL.description]) currentValues[COL.description] = list[3].trim();
-    if (forceReprocess || !currentValues[COL.date]) currentValues[COL.date] = list[4].trim();
+
     currentValues[COL.contributor] = provider + ':' + model;
+
+    const processNum = list[4] && list[4].trim() !== 'N/A' ? list[4].trim() : '';
+    if (processNum && (forceReprocess || !currentValues[COL.processId])) {
+      currentValues[COL.processId] = processNum;
+    }
 
     range.setValues([currentValues]);
     SpreadsheetApp.flush();
@@ -194,13 +199,14 @@ function processingStep(settingsJson) {
 
   cache.put('processingState', JSON.stringify(state), 21600);
 
-  const msgs = list.length === 5
+  const processNum = list[4] && list[4].trim() !== 'N/A' ? list[4].trim() : '';
+  const msgs = list.length >= 4
     ? [
         { text: '✓ ' + shortName, type: 'success' },
         { text: '  📌 ' + list[0].trim(), type: 'normal' },
         { text: '  📅 ' + list[1].trim(), type: 'normal' },
         { text: '  🏷️ ' + list[2].trim(), type: 'normal' },
-        { text: '  📆 ' + list[4].trim(), type: 'normal' }
+        ...(processNum ? [{ text: '  📎 Processo: ' + processNum, type: 'info' }] : [])
       ]
     : [{ text: '⚠ Resposta inválida da IA: ' + shortName, type: 'warning' }];
 
@@ -228,18 +234,33 @@ function buildPrompt(fileName, mimeType) {
     instruction = 'Analise o conteúdo textual do arquivo para encontrar datas citadas e identifique seu tipo documental, contexto eleitoral ou institucional e informações relevantes.';
   }
 
-  const format = 'Responda APENAS com uma lista no formato: [Título; Evento/Assunto; Palavras-chave; Descrição; Data]\n\nExemplo: [Ata de reunião do TRE-PR; Eleições 2024; eleições, ata, reunião; Documento que registra as deliberações da reunião ordinária do Tribunal Regional Eleitoral do Paraná referente ao pleito de 2024; 2024-05-15]\n\nRegra para a Data: Extraia a data exata do documento a partir do texto digitalizado, cabeçalhos ou rodapés (no formato AAAA-MM-DD, AAAA-MM ou AAAA). Se a data não puder ser extraída nem estimada de forma confiável pelo contexto ou nome do arquivo, preencha o campo de data com "s.d." (sem data).';
+  const format = [
+    'Responda APENAS com uma lista no formato:',
+    '[Título; Evento/Assunto; Palavras-chave; Descrição; Número de processo ou protocolo]',
+    '',
+    'Regras:',
+    '- Se o documento for um processo administrativo, judicial ou eleitoral e contiver número de processo, autuação ou protocolo, extraia-o exatamente no 5º campo (ex: 0001234-56.2024.6.16.0000).',
+    '- Se não houver número de processo ou protocolo identificável, coloque "N/A" no 5º campo.',
+    '',
+    'Exemplo com processo:',
+    '[Ata de Audiência TRE-PR; Audiência Processual 2024; eleições, audiência, processo; Documento que registra audiência do processo eleitoral.; 0001234-56.2024.6.16.0000]',
+    '',
+    'Exemplo sem processo:',
+    '[Cerimônia de Posse 2024; Posse de Magistrados; posse, magistrado, TRE-PR; Foto da cerimônia de posse de novos magistrados no TRE-PR.; N/A]'
+  ].join('\n');
 
   return context + '\n\n' + instruction + '\n\nNome do arquivo: ' + fileName + '\n\n' + format;
 }
 
 function extractListFromResponse(response) {
   if (!response) return [];
-  const match = response.match(/\[([^\]]+)\]/);
+  const match = response.match(/\[([^\]]+)\]/s);
   if (!match) return [];
-  const parts = match[1].split(';');
-  if (parts.length !== 5) return [];
-  return parts;
+  const parts = match[1].split(';').map(p => p.trim());
+  if (parts.length < 4) return [];
+  // Normalize to 5 elements; pad with empty string if process number absent
+  if (parts.length === 4) parts.push('');
+  return parts.slice(0, 5);
 }
 
 function cancelProcessing() {

@@ -12,7 +12,8 @@ function exportCsvForArchivematica() {
     "dc.subject", "dc.subject", "dc.subject",
     "dc.description", "dc.publisher", "dc.contributor",
     "dc.date", "dc.format", "dc.identifier", "dc.source",
-    "dc.language", "dc.relation", "dc.coverage", "dc.rights"
+    "dc.language", "dc.relation", "dc.coverage", "dc.rights",
+    "dcterms:provenance", "dc.identifier"
   ];
 
   const rows = [csvHeaders];
@@ -48,7 +49,9 @@ function exportCsvForArchivematica() {
       row[COL.language],
       row[COL.relation],
       row[COL.coverage],
-      row[COL.rights]
+      row[COL.rights],
+      row[COL.provenance],
+      row[COL.processId]
     ]);
   }
 

@@ -3,7 +3,8 @@ const REQUIRED_HEADERS = [
   "dc.subject", "dc.subject", "dc.subject",
   "dc.description", "dc.publisher", "dc.contributor",
   "dc.date", "dc.format", "dc.identifier", "filename",
-  "dc.language", "dc.relation", "dc.coverage", "dc.rights"
+  "dc.language", "dc.relation", "dc.coverage", "dc.rights",
+  "dcterms:provenance", "dc.identifier"
 ];
 
 // Column indices (0-based) — single source of truth used by Listing and Export
@@ -25,7 +26,9 @@ const COL = {
   language:   14,
   relation:   15,
   coverage:   16,
-  rights:     17
+  rights:     17,
+  provenance: 18,  // dcterms:provenance — agente de digitalização ou "Nato-digital"
+  processId:  19   // dc.identifier (2º) — número de processo/protocolo jurídico-administrativo
 };
 
 function ensureHeaders(sheet) {
