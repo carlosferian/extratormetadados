@@ -60,9 +60,9 @@
     input[type="url"]:focus,
     input[type="text"]:focus,
     input[type="password"]:focus,
-    select:focus { 
-      border-color: #3b82f6; 
-      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); 
+    select:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
     }
 
     .field { margin-bottom: 12px; }
@@ -92,6 +92,45 @@
       transition: all 0.2s;
     }
     .use-current:hover { background: #dbeafe; color: #1d4ed8; }
+
+    /* Resume banner */
+    .resume-banner {
+      display: none;
+      background: #fffbeb;
+      border: 1px solid #fcd34d;
+      border-radius: 8px;
+      margin: 12px 12px 0 12px;
+      padding: 12px 14px;
+    }
+    .resume-banner-title {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: #92400e;
+      margin-bottom: 4px;
+    }
+    .resume-banner-info {
+      font-size: 11.5px;
+      color: #78350f;
+      margin-bottom: 10px;
+    }
+    .resume-actions {
+      display: flex;
+      gap: 8px;
+    }
+    .btn-resume {
+      flex: 1;
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+    }
+    .btn-resume-yes { background: #d97706; color: #fff; }
+    .btn-resume-yes:hover { background: #b45309; }
+    .btn-resume-no  { background: #e2e8f0; color: #475569; }
+    .btn-resume-no:hover { background: #cbd5e1; }
 
     /* Accordion */
     .accordion-header {
@@ -125,7 +164,7 @@
       transition: transform .2s;
     }
     .chevron.open { transform: rotate(180deg); }
-    
+
     .accordion-body {
       display: none;
       background: #fff;
@@ -173,14 +212,31 @@
     }
     button:hover:not(:disabled) { filter: brightness(.95); transform: translateY(-0.5px); }
     button:active:not(:disabled) { transform: translateY(0.5px); }
-    button:disabled { opacity: .5; cursor: not-allowed; transform: none !important; }
+    button:disabled { opacity: .45; cursor: not-allowed; transform: none !important; filter: none !important; }
 
     .btn-blue   { background: #2563eb; color: #fff; box-shadow: 0 2px 4px 0 rgba(37, 99, 235, 0.2); }
     .btn-grey   { background: #e2e8f0; color: #334155; }
     .btn-green  { background: #10b981; color: #fff; box-shadow: 0 2px 4px 0 rgba(16, 185, 129, 0.2); }
-    .btn-red    { background: #fff; color: #ef4444; border: 1px solid #fca5a5; display: none; }
     .btn-save   { background: #fff; color: #2563eb; border: 1px solid #bfdbfe; font-size: 12.5px; padding: 6px 12px; margin-top: 10px; }
     .btn-save:hover:not(:disabled) { background: #eff6ff; }
+
+    /* Cancel button — always visible, state-driven */
+    .btn-cancel {
+      background: #fff;
+      color: #94a3b8;
+      border: 1.5px solid #e2e8f0;
+      font-size: 13px;
+    }
+    .btn-cancel.active {
+      color: #dc2626;
+      border-color: #fca5a5;
+      background: #fff;
+      box-shadow: 0 2px 4px 0 rgba(220, 38, 38, 0.1);
+    }
+    .btn-cancel.active:hover:not(:disabled) {
+      background: #fef2f2;
+      filter: none;
+    }
 
     .divider {
       border: none;
@@ -395,7 +451,7 @@
       margin: 2px 12px 24px 12px;
     }
     .log-accordion-body.open { display: block; }
-    
+
     .log-area {
       background: #0f172a;
       border: 1px solid #1e293b;
@@ -443,7 +499,6 @@
       min-width: 0;
     }
 
-    /* Em telas estreitas (Sidebar do Planilhas), empilha tudo */
     @media (max-width: 820px) {
       .dashboard-container {
         display: block;
@@ -458,7 +513,7 @@
       }
     }
 
-    /* Estilos Premium para a Tabela e Toolbar */
+    /* Table */
     .table-card {
       background: #fff;
       border-radius: 8px;
@@ -623,7 +678,6 @@
       font-style: italic;
     }
 
-    /* Badges de Status na Tabela */
     .status-badge {
       display: inline-block;
       padding: 3px 8px;
@@ -678,7 +732,17 @@
   <div class="dashboard-container">
     <!-- Coluna Esquerda: Controles -->
     <div class="left-panel">
-      
+
+      <!-- Banner de retomada (exibido quando há estado anterior em cache) -->
+      <div class="resume-banner" id="resumeBanner">
+        <div class="resume-banner-title">📂 Listagem anterior interrompida</div>
+        <div class="resume-banner-info" id="resumeBannerInfo">...</div>
+        <div class="resume-actions">
+          <button class="btn-resume btn-resume-yes" onclick="continueFromResume()">↩ Retomar</button>
+          <button class="btn-resume btn-resume-no"  onclick="dismissResume()">Ignorar</button>
+        </div>
+      </div>
+
       <!-- Pasta de Referência -->
       <div class="section">
         <label>Pasta de referência (Google Drive)</label>
@@ -731,7 +795,7 @@
             <div class="active-status" id="activeStatus">Aguardando fila</div>
           </div>
         </div>
-        
+
         <!-- Stepper -->
         <div class="stepper" id="stepper">
           <div class="step-node" id="step1">
@@ -772,7 +836,7 @@
       <!-- Ações -->
       <div class="actions">
         <button class="btn-blue" id="btnList" onclick="startListing()">&#128193;&nbsp; Listar documentos</button>
-        
+
         <!-- Opção de reprocessamento forçado -->
         <div style="display: flex; align-items: center; margin: 4px 0 2px 2px;">
           <input type="checkbox" id="chkForce" style="margin-right: 6px; cursor: pointer; width: auto;">
@@ -782,7 +846,11 @@
         <button class="btn-grey" id="btnDescribe" onclick="startDescription()">&#129302;&nbsp; Descrever com IA</button>
         <hr class="divider">
         <button class="btn-green" id="btnExport" onclick="exportCsv()">&#128229;&nbsp; Exportar CSV (Archivematica)</button>
-        <button class="btn-red" id="btnCancel" onclick="cancelAction()">&#10005; Cancelar</button>
+
+        <!-- Botão Cancelar — sempre visível, ativo apenas durante operações -->
+        <button class="btn-cancel" id="btnCancel" onclick="cancelAction()" disabled>
+          &#10005; <span id="cancelText">Cancelar</span>
+        </button>
       </div>
 
       <!-- Progresso -->
@@ -856,8 +924,7 @@
   <script>
     var appState = 'idle';
     var startTime = null;
-    var lastProcessedTime = null;
-    var tableRowsData = []; // Cache local dos dados da planilha para busca e seleções rápidas
+    var tableRowsData = [];
 
     var MODEL_HINTS = {
       gemini: 'Multimodal: todos os modelos Gemini suportam imagens.<br>Ex: gemini-2.5-flash',
@@ -866,133 +933,91 @@
       ollama: 'Multimodal: llava, bakllava, moondream.<br>Ex: llava, moondream'
     };
 
+    /* ── Accordion helpers ── */
     function toggleAccordion() {
       var body = document.getElementById('accordionBody');
       var chevron = document.getElementById('chevron');
-      var open = body.classList.toggle('open');
-      if (open) {
-        chevron.classList.add('open');
-      } else {
-        chevron.classList.remove('open');
-      }
+      chevron.classList.toggle('open', body.classList.toggle('open'));
     }
 
     function toggleLogAccordion() {
       var body = document.getElementById('logAccordionBody');
       var chevron = document.getElementById('logChevron');
-      var open = body.classList.toggle('open');
-      if (open) {
-        chevron.classList.add('open');
-      } else {
-        chevron.classList.remove('open');
-      }
+      chevron.classList.toggle('open', body.classList.toggle('open'));
     }
 
+    /* ── Provider UI ── */
     function updateProviderUI() {
       var provider = document.getElementById('provider').value;
-      var fieldApiKey = document.getElementById('fieldApiKey');
-      var fieldOllamaUrl = document.getElementById('fieldOllamaUrl');
-      var labelApiKey = document.getElementById('labelApiKey');
-      var modelHint = document.getElementById('modelHint');
+      document.getElementById('fieldApiKey').style.display    = provider === 'ollama' ? 'none' : 'block';
+      document.getElementById('fieldOllamaUrl').style.display = provider === 'ollama' ? 'block' : 'none';
 
-      if (provider === 'ollama') {
-        fieldApiKey.style.display = 'none';
-        fieldOllamaUrl.style.display = 'block';
-      } else {
-        fieldApiKey.style.display = 'block';
-        fieldOllamaUrl.style.display = 'none';
-      }
-
-      if (provider === 'gemini') labelApiKey.textContent = 'Gemini API Key';
-      else if (provider === 'openai') labelApiKey.textContent = 'OpenAI API Key';
-      else if (provider === 'openrouter') labelApiKey.textContent = 'OpenRouter API Key';
-
-      modelHint.innerHTML = MODEL_HINTS[provider] || '';
+      var labelMap = { gemini: 'Gemini API Key', openai: 'OpenAI API Key', openrouter: 'OpenRouter API Key' };
+      document.getElementById('labelApiKey').textContent = labelMap[provider] || 'API Key';
+      document.getElementById('modelHint').innerHTML = MODEL_HINTS[provider] || '';
     }
 
+    /* ── Settings ── */
     function loadSettings() {
       google.script.run
         .withSuccessHandler(function(s) {
-          document.getElementById('provider').value = s.provider || 'gemini';
-          document.getElementById('ollamaUrl').value = s.ollamaUrl || 'http://localhost:11434';
-
+          document.getElementById('provider').value   = s.provider || 'gemini';
+          document.getElementById('ollamaUrl').value  = s.ollamaUrl || 'http://localhost:11434';
           var provider = s.provider || 'gemini';
-          if (provider === 'gemini') {
-            document.getElementById('apiKey').value = s.geminiApiKey || '';
-            document.getElementById('model').value = s.geminiModel || 'gemini-2.5-flash';
-          } else if (provider === 'openai') {
-            document.getElementById('apiKey').value = s.openaiApiKey || '';
-            document.getElementById('model').value = s.openaiModel || 'gpt-4o';
-          } else if (provider === 'openrouter') {
-            document.getElementById('apiKey').value = s.openrouterApiKey || '';
-            document.getElementById('model').value = s.openrouterModel || 'google/gemini-flash-1.5';
-          } else if (provider === 'ollama') {
-            document.getElementById('model').value = s.ollamaModel || 'llava';
-          }
+          if (provider === 'gemini')      { document.getElementById('apiKey').value = s.geminiApiKey || '';     document.getElementById('model').value = s.geminiModel || 'gemini-2.5-flash'; }
+          else if (provider === 'openai') { document.getElementById('apiKey').value = s.openaiApiKey || '';     document.getElementById('model').value = s.openaiModel || 'gpt-4o'; }
+          else if (provider === 'openrouter') { document.getElementById('apiKey').value = s.openrouterApiKey || ''; document.getElementById('model').value = s.openrouterModel || 'google/gemini-flash-1.5'; }
+          else if (provider === 'ollama') { document.getElementById('model').value = s.ollamaModel || 'llava'; }
           updateProviderUI();
         })
-        .withFailureHandler(function(err) {
-          addLog('⚠ Erro ao carregar configurações: ' + err.message, 'warning');
-        })
+        .withFailureHandler(function(err) { addLog('⚠ Erro ao carregar configurações: ' + err.message, 'warning'); })
         .getSettings();
     }
 
     function saveSettingsUI() {
-      var settings = collectSettings();
       google.script.run
-        .withSuccessHandler(function(msg) {
-          addLog('✅ ' + msg, 'success');
-        })
-        .withFailureHandler(function(err) {
-          addLog('❌ Erro ao salvar: ' + err.message, 'error');
-        })
-        .saveSettings(settings);
+        .withSuccessHandler(function(msg) { addLog('✅ ' + msg, 'success'); })
+        .withFailureHandler(function(err) { addLog('❌ Erro ao salvar: ' + err.message, 'error'); })
+        .saveSettings(collectSettings());
     }
 
     function collectSettings() {
       var provider = document.getElementById('provider').value;
-      var apiKey = document.getElementById('apiKey').value.trim();
-      var model = document.getElementById('model').value.trim();
+      var apiKey   = document.getElementById('apiKey').value.trim();
+      var model    = document.getElementById('model').value.trim();
       var ollamaUrl = document.getElementById('ollamaUrl').value.trim();
-
       return {
-        provider: provider,
-        geminiApiKey:     provider === 'gemini'      ? apiKey : '',
-        geminiModel:      provider === 'gemini'      ? model  : 'gemini-2.5-flash',
-        openaiApiKey:     provider === 'openai'      ? apiKey : '',
-        openaiModel:      provider === 'openai'      ? model  : 'gpt-4o',
-        openrouterApiKey: provider === 'openrouter'  ? apiKey : '',
-        openrouterModel:  provider === 'openrouter'  ? model  : 'google/gemini-flash-1.5',
+        provider,
+        geminiApiKey:     provider === 'gemini'     ? apiKey : '',
+        geminiModel:      provider === 'gemini'     ? model  : 'gemini-2.5-flash',
+        openaiApiKey:     provider === 'openai'     ? apiKey : '',
+        openaiModel:      provider === 'openai'     ? model  : 'gpt-4o',
+        openrouterApiKey: provider === 'openrouter' ? apiKey : '',
+        openrouterModel:  provider === 'openrouter' ? model  : 'google/gemini-flash-1.5',
         ollamaUrl:        ollamaUrl || 'http://localhost:11434',
-        ollamaModel:      provider === 'ollama'      ? model  : 'llava'
+        ollamaModel:      provider === 'ollama'     ? model  : 'llava'
       };
     }
 
     function getActiveSettings() {
-      var settings = collectSettings();
-      var provider = settings.provider;
-      if (provider === 'gemini') settings.model = settings.geminiModel;
-      else if (provider === 'openai') settings.model = settings.openaiModel;
-      else if (provider === 'openrouter') settings.model = settings.openrouterModel;
-      else if (provider === 'ollama') settings.model = settings.ollamaModel;
-      return settings;
+      var s = collectSettings();
+      var p = s.provider;
+      s.model = p === 'gemini' ? s.geminiModel : p === 'openai' ? s.openaiModel : p === 'openrouter' ? s.openrouterModel : s.ollamaModel;
+      return s;
     }
 
     function useCurrentFolder() {
       google.script.run
-        .withSuccessHandler(function(url) {
-          document.getElementById('folderUrl').value = url;
-        })
-        .withFailureHandler(function(err) {
-          addLog('❌ ' + err.message, 'error');
-        })
+        .withSuccessHandler(function(url) { document.getElementById('folderUrl').value = url; })
+        .withFailureHandler(function(err) { addLog('❌ ' + err.message, 'error'); })
         .getCurrentFolderUrl();
     }
 
+    /* ── Active card / stepper ── */
     function showActiveCard(icon, name, status, step) {
       document.getElementById('activeCard').style.display = 'block';
-      document.getElementById('activeIcon').textContent = icon;
-      document.getElementById('activeName').textContent = name;
+      document.getElementById('activeIcon').textContent   = icon;
+      document.getElementById('activeName').textContent   = name;
       document.getElementById('activeStatus').textContent = status;
       updateStepper(step);
     }
@@ -1001,58 +1026,131 @@
       for (var i = 1; i <= 4; i++) {
         var node = document.getElementById('step' + i);
         node.classList.remove('active', 'completed');
-        if (i < step) {
-          node.classList.add('completed');
-        } else if (i === step) {
-          node.classList.add('active');
-        }
+        if (i < step)       node.classList.add('completed');
+        else if (i === step) node.classList.add('active');
       }
     }
 
     function getFileIcon(filename) {
       if (!filename) return '📝';
       var ext = filename.split('.').pop().toLowerCase();
-      if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'tiff'].indexOf(ext) >= 0) return '🖼️';
+      if (['jpg','jpeg','png','gif','webp','bmp','tiff'].indexOf(ext) >= 0) return '🖼️';
       if (ext === 'pdf') return '📄';
-      if (['doc', 'docx', 'odt', 'txt', 'rtf'].indexOf(ext) >= 0) return '📝';
-      if (['xls', 'xlsx', 'ods', 'csv', 'tsv'].indexOf(ext) >= 0) return '📊';
-      if (['epub', 'mobi', 'azw3'].indexOf(ext) >= 0) return '📚';
+      if (['doc','docx','odt','txt','rtf'].indexOf(ext) >= 0) return '📝';
+      if (['xls','xlsx','ods','csv','tsv'].indexOf(ext) >= 0) return '📊';
       return '📄';
     }
 
-    function startListing() {
-      var url = document.getElementById('folderUrl').value.trim();
-      if (!url) {
-        addLog('❌ Cole o link ou ID da pasta do Google Drive.', 'error');
-        return;
-      }
+    /* ── Cancel button state ── */
+    function setCancelActive(label) {
+      var btn = document.getElementById('btnCancel');
+      btn.disabled = false;
+      btn.classList.add('active');
+      document.getElementById('cancelText').textContent = label || 'Cancelar';
+    }
+
+    function setCancelIdle() {
+      var btn = document.getElementById('btnCancel');
+      btn.disabled = true;
+      btn.classList.remove('active');
+      document.getElementById('cancelText').textContent = 'Cancelar';
+    }
+
+    function setBusy(action) {
+      document.getElementById('btnList').disabled     = true;
+      document.getElementById('btnDescribe').disabled = true;
+      document.getElementById('btnExport').disabled   = true;
+      if (action === 'listing')    setCancelActive('Parar Listagem');
+      else if (action === 'processing') setCancelActive('Parar IA');
+      else setCancelIdle(); // export: can't cancel mid-flight
+    }
+
+    function setIdle() {
+      document.getElementById('btnList').disabled     = false;
+      document.getElementById('btnDescribe').disabled = false;
+      document.getElementById('btnExport').disabled   = false;
+      setCancelIdle();
+    }
+
+    /* ── Resume banner ── */
+    function checkListingResume() {
+      google.script.run
+        .withSuccessHandler(function(state) {
+          if (!state) return;
+          var banner = document.getElementById('resumeBanner');
+          document.getElementById('resumeBannerInfo').textContent =
+            state.foldersRemaining + ' pasta(s) restante(s), ' + state.processedCount + ' arquivo(s) catalogados.';
+          banner.style.display = 'block';
+        })
+        .withFailureHandler(function() { /* silently ignore */ })
+        .checkListingState();
+    }
+
+    function continueFromResume() {
+      document.getElementById('resumeBanner').style.display = 'none';
       appState = 'listing';
       setBusy('listing');
-      addLog('📂 Conectando à pasta...', 'info');
-
-      // Feedback visual reativo
-      showActiveCard('📁', 'Google Drive', 'Conectando à pasta...', 1);
+      addLog('↩ Retomando listagem anterior...', 'info');
+      showActiveCard('📁', 'Google Drive', 'Retomando listagem...', 2);
       document.getElementById('statProcessed').textContent = '0';
-      document.getElementById('statSkipped').textContent = '0';
-      document.getElementById('statTime').textContent = '~--:--';
+      document.getElementById('statSkipped').textContent   = '0';
+      document.getElementById('statTime').textContent      = '~--:--';
 
       google.script.run
         .withSuccessHandler(function(result) {
           addLog(result.message, getLogClass(result.message));
           if (!result.done) {
-            showActiveCard('📁', 'Google Drive', 'Listando arquivos recursivos...', 2);
             nextListingStep();
           } else {
-            setIdle();
-            appState = 'idle';
+            setIdle(); appState = 'idle';
             document.getElementById('activeCard').style.display = 'none';
             refreshTableData();
           }
         })
         .withFailureHandler(function(err) {
           addLog('❌ ' + err.message, 'error');
-          setIdle();
-          appState = 'idle';
+          setIdle(); appState = 'idle';
+          document.getElementById('activeCard').style.display = 'none';
+        })
+        .resumeListingSession();
+    }
+
+    function dismissResume() {
+      document.getElementById('resumeBanner').style.display = 'none';
+      google.script.run.cancelListing(); // clear stale cache state
+    }
+
+    /* ── Listing ── */
+    function startListing() {
+      var url = document.getElementById('folderUrl').value.trim();
+      if (!url) { addLog('❌ Cole o link ou ID da pasta do Google Drive.', 'error'); return; }
+      appState = 'listing';
+      setBusy('listing');
+      addLog('📂 Conectando à pasta...', 'info');
+      showActiveCard('📁', 'Google Drive', 'Conectando à pasta...', 1);
+      document.getElementById('statProcessed').textContent = '0';
+      document.getElementById('statSkipped').textContent   = '0';
+      document.getElementById('statTime').textContent      = '~--:--';
+
+      google.script.run
+        .withSuccessHandler(function(result) {
+          addLog(result.message, getLogClass(result.message));
+          if (!result.done) {
+            // Show existing count if resuming from filled sheet
+            if (result.processedCount > 0) {
+              document.getElementById('statProcessed').textContent = result.processedCount;
+            }
+            showActiveCard('📁', 'Google Drive', 'Listando arquivos recursivos...', 2);
+            nextListingStep();
+          } else {
+            setIdle(); appState = 'idle';
+            document.getElementById('activeCard').style.display = 'none';
+            refreshTableData();
+          }
+        })
+        .withFailureHandler(function(err) {
+          addLog('❌ ' + err.message, 'error');
+          setIdle(); appState = 'idle';
           document.getElementById('activeCard').style.display = 'none';
         })
         .startListingSession(url);
@@ -1063,17 +1161,15 @@
       google.script.run
         .withSuccessHandler(function(result) {
           addLog(result.message, getLogClass(result.message));
-          
           document.getElementById('statProcessed').textContent = result.processedCount;
-          document.getElementById('statSkipped').textContent = result.folderCount;
-          
+          document.getElementById('statSkipped').textContent   = result.folderCount;
           if (!result.done) {
-            showActiveCard('📁', 'Google Drive', 'Analisando pasta ' + result.folderCount + '...', 2);
+            showActiveCard('📁', 'Google Drive',
+              'Pasta ' + result.folderCount + ' | ' + (result.remaining || 0) + ' restante(s) na fila', 2);
             nextListingStep();
           } else {
-            setIdle();
-            appState = 'idle';
-            showActiveCard('✓', 'Concluído', 'Varredura finalizada com sucesso!', 4);
+            setIdle(); appState = 'idle';
+            showActiveCard('✓', 'Concluído', 'Varredura finalizada!', 4);
             updateStepper(5);
             refreshTableData();
             setTimeout(function() {
@@ -1083,141 +1179,88 @@
         })
         .withFailureHandler(function(err) {
           addLog('❌ ' + err.message, 'error');
-          setIdle();
-          appState = 'idle';
+          setIdle(); appState = 'idle';
           document.getElementById('activeCard').style.display = 'none';
         })
         .listingStep();
     }
 
+    /* ── Processing ── */
     function startDescription() {
-      var settings = getActiveSettings();
+      var settings     = getActiveSettings();
       var forceReprocess = document.getElementById('chkForce').checked;
-      
-      // Coletar linhas selecionadas na tabela interativa
-      var checkedCheckboxes = document.querySelectorAll('.row-checkbox:checked');
+      var checkedBoxes = document.querySelectorAll('.row-checkbox:checked');
       var selectedRowNums = [];
-      checkedCheckboxes.forEach(function(cb) {
-        selectedRowNums.push(parseInt(cb.dataset.rownum));
-      });
+      checkedBoxes.forEach(function(cb) { selectedRowNums.push(parseInt(cb.dataset.rownum)); });
 
       appState = 'processing';
       setBusy('processing');
       addLog('🤖 Verificando planilha de metadados...', 'info');
-
       startTime = Date.now();
       document.getElementById('statProcessed').textContent = '0';
-      document.getElementById('statSkipped').textContent = '0';
-      document.getElementById('statTime').textContent = 'Calculando...';
+      document.getElementById('statSkipped').textContent   = '0';
+      document.getElementById('statTime').textContent      = 'Calculando...';
       showActiveCard('🤖', 'Fila de Metadados', 'Verificando planilha...', 1);
+
+      function doInit() {
+        google.script.run
+          .withSuccessHandler(function(initResult) {
+            addLog(initResult.message, getLogClass(initResult.message));
+            if (!initResult.done) {
+              updateProgress(0, initResult.total);
+              if (initResult.analyzingNext) {
+                addLog('🔍 Analisando: ' + initResult.analyzingNext + '...', 'info');
+                showActiveCard(getFileIcon(initResult.analyzingNext), initResult.analyzingNext, 'Lendo conteúdo...', 2);
+              }
+              nextProcessingStep(settings, initResult.total);
+            } else {
+              setIdle(); appState = 'idle';
+              updateProgress(0, 0);
+              document.getElementById('activeCard').style.display = 'none';
+              refreshTableData();
+            }
+          })
+          .withFailureHandler(function(err) {
+            addLog('❌ ' + err.message, 'error');
+            setIdle(); appState = 'idle';
+            document.getElementById('activeCard').style.display = 'none';
+          })
+          .startProcessingSession(forceReprocess, selectedRowNums);
+      }
 
       google.script.run
         .withSuccessHandler(function(imgInfo) {
-          if (imgInfo.hasImages) {
-            var provider = settings.provider || 'gemini';
-            var model = settings.model || '';
-            if (typeof isMultimodalClient === 'function' && !isMultimodalClient(provider, model)) {
-              addLog('⚠ ' + imgInfo.count + ' imagem(ns) detectada(s). O modelo atual pode não suportá-las, mas o processamento continuará.', 'warning');
-            } else {
-              addLog('⚠ ' + imgInfo.count + ' imagem(ns) detectada(s) na planilha.', 'warning');
-            }
-          }
-
-          google.script.run
-            .withSuccessHandler(function(initResult) {
-              addLog(initResult.message, getLogClass(initResult.message));
-              if (!initResult.done) {
-                updateProgress(0, initResult.total);
-                if (initResult.analyzingNext) {
-                  addLog('🔍 Analisando: ' + initResult.analyzingNext + '...', 'info');
-                  var icon = getFileIcon(initResult.analyzingNext);
-                  showActiveCard(icon, initResult.analyzingNext, 'Lendo conteúdo...', 2);
-                }
-                nextProcessingStep(settings, initResult.total);
-              } else {
-                setIdle();
-                appState = 'idle';
-                updateProgress(0, 0);
-                document.getElementById('activeCard').style.display = 'none';
-                refreshTableData();
-              }
-            })
-            .withFailureHandler(function(err) {
-              addLog('❌ ' + err.message, 'error');
-              setIdle();
-              appState = 'idle';
-              document.getElementById('activeCard').style.display = 'none';
-            })
-            .startProcessingSession(forceReprocess, selectedRowNums);
+          if (imgInfo.hasImages) addLog('⚠ ' + imgInfo.count + ' imagem(ns) detectada(s) na planilha.', 'warning');
+          doInit();
         })
-        .withFailureHandler(function(err) {
-          addLog('⚠ Aviso: ' + err.message, 'warning');
-          google.script.run
-            .withSuccessHandler(function(initResult) {
-              addLog(initResult.message, getLogClass(initResult.message));
-              if (!initResult.done) {
-                updateProgress(0, initResult.total);
-                if (initResult.analyzingNext) {
-                  addLog('🔍 Analisando: ' + initResult.analyzingNext + '...', 'info');
-                  var icon = getFileIcon(initResult.analyzingNext);
-                  showActiveCard(icon, initResult.analyzingNext, 'Lendo conteúdo...', 2);
-                }
-                nextProcessingStep(settings, initResult.total);
-              } else {
-                setIdle();
-                appState = 'idle';
-                document.getElementById('activeCard').style.display = 'none';
-                refreshTableData();
-              }
-            })
-            .withFailureHandler(function(err2) {
-              addLog('❌ ' + err2.message, 'error');
-              setIdle();
-              appState = 'idle';
-              document.getElementById('activeCard').style.display = 'none';
-            })
-            .startProcessingSession(forceReprocess, selectedRowNums);
-        })
+        .withFailureHandler(function() { doInit(); })
         .hasImages();
     }
 
     function nextProcessingStep(settings, total) {
       if (appState !== 'processing') return;
       var settingsJson = JSON.stringify(settings);
-      
-      // Animar stepper indicando análise da IA ativa
-      var activeName = document.getElementById('activeName').textContent;
-      var icon = getFileIcon(activeName);
+      var activeName   = document.getElementById('activeName').textContent;
+      var icon         = getFileIcon(activeName);
       showActiveCard(icon, activeName, 'Consultando IA (Dublin Core)...', 3);
 
       google.script.run
         .withSuccessHandler(function(result) {
-          // Gravação finalizada
           showActiveCard(icon, activeName, 'Gravando metadados...', 4);
-          
           var msgs = result.messages || [{ text: result.message || '', type: getLogClass(result.message || '') }];
           msgs.forEach(function(m) { addLog(m.text, m.type); });
 
           var done = result.processedCount + result.skippedCount;
           updateProgress(done, result.total || total);
-
           document.getElementById('statProcessed').textContent = result.processedCount;
-          document.getElementById('statSkipped').textContent = result.skippedCount;
+          document.getElementById('statSkipped').textContent   = result.skippedCount;
 
-          // Cálculo dinâmico do tempo restante
           if (result.processedCount > 0 && done < total) {
-            var elapsedMs = Date.now() - startTime;
-            var avgMsPerFile = elapsedMs / result.processedCount;
-            var remainingFiles = total - done;
-            var estRemainingSecs = Math.round((avgMsPerFile * remainingFiles) / 1000);
-            
-            if (estRemainingSecs > 0) {
-              var mins = Math.floor(estRemainingSecs / 60);
-              var secs = estRemainingSecs % 60;
-              document.getElementById('statTime').textContent = mins + 'm ' + secs + 's';
-            } else {
-              document.getElementById('statTime').textContent = 'Poucos seg';
-            }
+            var elapsed = Date.now() - startTime;
+            var avgMs   = elapsed / result.processedCount;
+            var remSecs = Math.round((avgMs * (total - done)) / 1000);
+            document.getElementById('statTime').textContent =
+              remSecs > 0 ? Math.floor(remSecs / 60) + 'm ' + (remSecs % 60) + 's' : 'Poucos seg';
           }
 
           if (!result.done) {
@@ -1225,15 +1268,13 @@
               addLog('🔍 Analisando: ' + result.analyzingNext + '...', 'info');
               var nextIcon = getFileIcon(result.analyzingNext);
               setTimeout(function() {
-                if (appState === 'processing') {
+                if (appState === 'processing')
                   showActiveCard(nextIcon, result.analyzingNext, 'Lendo conteúdo...', 2);
-                }
               }, 400);
             }
             nextProcessingStep(settings, result.total || total);
           } else {
-            setIdle();
-            appState = 'idle';
+            setIdle(); appState = 'idle';
             document.getElementById('statTime').textContent = '0m 0s';
             showActiveCard('✓', 'Processamento Finalizado', 'Concluído com sucesso!', 4);
             updateStepper(5);
@@ -1245,44 +1286,38 @@
         })
         .withFailureHandler(function(err) {
           addLog('❌ ' + err.message, 'error');
-          setIdle();
-          appState = 'idle';
+          setIdle(); appState = 'idle';
           document.getElementById('activeCard').style.display = 'none';
         })
         .processingStep(settingsJson);
     }
 
+    /* ── Cancel ── */
     function cancelAction() {
-      if (appState === 'listing') {
-        appState = 'idle';
+      if (appState === 'idle') return;
+
+      var wasState = appState;
+      appState = 'idle'; // immediately stops next step callbacks
+      setIdle();
+      document.getElementById('activeCard').style.display = 'none';
+      document.getElementById('progressSection').style.display = 'none';
+
+      if (wasState === 'listing') {
+        addLog('⏹ Parando listagem...', 'warning');
         google.script.run
-          .withSuccessHandler(function(msg) {
-            addLog('✅ ' + msg, 'success');
-            setIdle();
-            document.getElementById('activeCard').style.display = 'none';
-          })
-          .withFailureHandler(function() { 
-            setIdle(); 
-            document.getElementById('activeCard').style.display = 'none';
-          })
+          .withSuccessHandler(function(msg) { addLog('✅ ' + msg, 'success'); refreshTableData(); })
+          .withFailureHandler(function() {})
           .cancelListing();
-      } else if (appState === 'processing') {
-        appState = 'idle';
+      } else if (wasState === 'processing') {
+        addLog('⏹ Parando processamento IA...', 'warning');
         google.script.run
-          .withSuccessHandler(function(msg) {
-            addLog('✅ ' + msg, 'success');
-            setIdle();
-            document.getElementById('activeCard').style.display = 'none';
-            refreshTableData();
-          })
-          .withFailureHandler(function() { 
-            setIdle(); 
-            document.getElementById('activeCard').style.display = 'none';
-          })
+          .withSuccessHandler(function(msg) { addLog('✅ ' + msg, 'success'); refreshTableData(); })
+          .withFailureHandler(function() {})
           .cancelProcessing();
       }
     }
 
+    /* ── Export ── */
     function exportCsv() {
       setBusy('export');
       addLog('📥 Gerando metadata.csv na pasta...', 'info');
@@ -1298,9 +1333,10 @@
         .exportCsvForArchivematica();
     }
 
+    /* ── Log helpers ── */
     function addLog(message, cls) {
       var area = document.getElementById('logArea');
-      var div = document.createElement('div');
+      var div  = document.createElement('div');
       div.className = 'log-entry ' + (cls || 'normal');
       div.innerHTML = message;
       area.appendChild(div);
@@ -1310,177 +1346,120 @@
     function getLogClass(message) {
       if (!message) return 'normal';
       if (message.indexOf('✅') >= 0) return 'success';
-      if (message.indexOf('⚠') >= 0) return 'warning';
+      if (message.indexOf('⚠') >= 0)  return 'warning';
       if (message.indexOf('❌') >= 0) return 'error';
       if (message.indexOf('🤖') >= 0 || message.indexOf('📂') >= 0) return 'info';
       return 'normal';
     }
 
-    function setBusy(action) {
-      document.getElementById('btnList').disabled = true;
-      document.getElementById('btnDescribe').disabled = true;
-      document.getElementById('btnExport').disabled = true;
-      if (action !== 'export') {
-        document.getElementById('btnCancel').style.display = 'flex';
-      }
-    }
-
-    function setIdle() {
-      document.getElementById('btnList').disabled = false;
-      document.getElementById('btnDescribe').disabled = false;
-      document.getElementById('btnExport').disabled = false;
-      document.getElementById('btnCancel').style.display = 'none';
-    }
-
+    /* ── Progress bar ── */
     function updateProgress(current, total) {
       var section = document.getElementById('progressSection');
-      var fill = document.getElementById('progressFill');
-      var count = document.getElementById('progressCount');
-
       if (!total || total === 0) {
         section.style.display = 'none';
-        fill.style.width = '0%';
+        document.getElementById('progressFill').style.width = '0%';
         return;
       }
-
       section.style.display = 'block';
       var pct = Math.round((current / total) * 100);
-      fill.style.width = pct + '%';
-      count.textContent = current + '/' + total;
+      document.getElementById('progressFill').style.width = pct + '%';
+      document.getElementById('progressCount').textContent = current + '/' + total;
     }
 
-    /* ==========================================
-       LÓGICA DA TABELA INTERATIVA (FRONTEND)
-       ========================================== */
-
+    /* ── Table ── */
     function refreshTableData() {
-      var tableBody = document.getElementById('tableBody');
-      tableBody.innerHTML = '<tr><td colspan="6" class="no-data-msg">🔄 Carregando dados da planilha...</td></tr>';
-      
+      document.getElementById('tableBody').innerHTML =
+        '<tr><td colspan="6" class="no-data-msg">🔄 Carregando dados da planilha...</td></tr>';
       google.script.run
-        .withSuccessHandler(function(rows) {
-          tableRowsData = rows;
-          renderRows(rows);
-        })
+        .withSuccessHandler(function(rows) { tableRowsData = rows; renderRows(rows); })
         .withFailureHandler(function(err) {
-          tableBody.innerHTML = '<tr><td colspan="6" class="no-data-msg" style="color: #ef4444;">❌ Falha ao carregar dados: ' + err.message + '</td></tr>';
+          document.getElementById('tableBody').innerHTML =
+            '<tr><td colspan="6" class="no-data-msg" style="color:#ef4444;">❌ Falha ao carregar: ' + err.message + '</td></tr>';
         })
         .getSpreadsheetRows();
     }
 
     function renderRows(rows) {
-      var tableBody = document.getElementById('tableBody');
-      tableBody.innerHTML = '';
-      
+      var tbody = document.getElementById('tableBody');
+      tbody.innerHTML = '';
       if (!rows || rows.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="6" class="no-data-msg">Nenhum documento listado na planilha. Conecte uma pasta acima e clique em "Listar documentos".</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="no-data-msg">Nenhum documento listado. Conecte uma pasta acima e clique em "Listar documentos".</td></tr>';
         document.getElementById('selectionStatus').textContent = '0 arquivo(s) selecionado(s) de 0 total.';
         return;
       }
-
       rows.forEach(function(row) {
         var tr = document.createElement('tr');
-        tr.id = 'row-' + row.rowNum;
+        tr.id  = 'row-' + row.rowNum;
 
-        // Checkbox td
+        // checkbox
         var tdCheck = document.createElement('td');
         var cb = document.createElement('input');
-        cb.type = 'checkbox';
-        cb.className = 'row-checkbox';
-        cb.dataset.rownum = row.rowNum;
+        cb.type = 'checkbox'; cb.className = 'row-checkbox'; cb.dataset.rownum = row.rowNum;
         cb.onchange = updateSelectionCount;
-        tdCheck.appendChild(cb);
-        tr.appendChild(tdCheck);
+        tdCheck.appendChild(cb); tr.appendChild(tdCheck);
 
-        // Repositório td
+        // repository badge
         var tdRep = document.createElement('td');
         var repBadge = document.createElement('span');
         repBadge.className = 'rep-badge ' + (row.repository === 'SIM' ? 'rep-sim' : 'rep-nao');
         repBadge.textContent = row.repository === 'SIM' ? 'SIM' : 'NÃO';
-        tdRep.appendChild(repBadge);
-        tr.appendChild(tdRep);
+        tdRep.appendChild(repBadge); tr.appendChild(tdRep);
 
-        // Nome do arquivo td
+        // filename
         var tdFile = document.createElement('td');
-        var icon = getFileIcon(row.filename);
-        tdFile.innerHTML = '<span style="margin-right: 6px;">' + icon + '</span>' + row.filename;
-        tdFile.title = row.filename;
-        tr.appendChild(tdFile);
+        tdFile.innerHTML = '<span style="margin-right:6px;">' + getFileIcon(row.filename) + '</span>' + row.filename;
+        tdFile.title = row.filename; tr.appendChild(tdFile);
 
-        // Status td
+        // status
         var tdStatus = document.createElement('td');
-        var statusBadge = document.createElement('span');
-        var statusClass = 'status-pendente';
-        if (row.status === 'Concluído') statusClass = 'status-concluido';
-        if (row.status === 'Ignorado') statusClass = 'status-ignorado';
-        statusBadge.className = 'status-badge ' + statusClass;
-        statusBadge.textContent = row.status;
-        tdStatus.appendChild(statusBadge);
-        tr.appendChild(tdStatus);
+        var sb = document.createElement('span');
+        var sc = row.status === 'Concluído' ? 'status-concluido' : row.status === 'Ignorado' ? 'status-ignorado' : 'status-pendente';
+        sb.className = 'status-badge ' + sc; sb.textContent = row.status;
+        tdStatus.appendChild(sb); tr.appendChild(tdStatus);
 
-        // Título td
+        // title
         var tdTitle = document.createElement('td');
-        tdTitle.textContent = row.title || '-';
-        tdTitle.title = row.title || '';
+        tdTitle.textContent = row.title || '-'; tdTitle.title = row.title || '';
         tr.appendChild(tdTitle);
 
-        // Data td
+        // date
         var tdDate = document.createElement('td');
-        tdDate.textContent = row.date || '-';
-        tr.appendChild(tdDate);
+        tdDate.textContent = row.date || '-'; tr.appendChild(tdDate);
 
-        tableBody.appendChild(tr);
+        tbody.appendChild(tr);
       });
-
       document.getElementById('selectAllCheckbox').checked = false;
       updateSelectionCount();
     }
 
     function filterTable() {
-      var query = document.getElementById('tableSearch').value.toLowerCase().trim();
-      var filtered = tableRowsData.filter(function(row) {
-        return row.filename.toLowerCase().indexOf(query) !== -1 ||
-               (row.title && row.title.toLowerCase().indexOf(query) !== -1);
-      });
-      renderRows(filtered);
+      var q = document.getElementById('tableSearch').value.toLowerCase().trim();
+      renderRows(tableRowsData.filter(function(row) {
+        return row.filename.toLowerCase().indexOf(q) !== -1 ||
+               (row.title && row.title.toLowerCase().indexOf(q) !== -1);
+      }));
     }
 
     function toggleSelectAll(master) {
-      var checkboxes = document.querySelectorAll('.row-checkbox');
-      checkboxes.forEach(function(cb) {
-        cb.checked = master.checked;
-      });
+      document.querySelectorAll('.row-checkbox').forEach(function(cb) { cb.checked = master.checked; });
       updateSelectionCount();
     }
 
     function updateSelectionCount() {
-      var total = tableRowsData.length;
       var selected = document.querySelectorAll('.row-checkbox:checked').length;
-      document.getElementById('selectionStatus').textContent = selected + ' arquivo(s) selecionado(s) de ' + total + ' total.';
+      document.getElementById('selectionStatus').textContent =
+        selected + ' arquivo(s) selecionado(s) de ' + tableRowsData.length + ' total.';
     }
 
     function bulkToggleRepository(value) {
-      var checkedCheckboxes = document.querySelectorAll('.row-checkbox:checked');
-      if (checkedCheckboxes.length === 0) {
-        addLog('⚠ Selecione pelo menos um arquivo na tabela para marcar em lote.', 'warning');
-        return;
-      }
-
+      var checked = document.querySelectorAll('.row-checkbox:checked');
+      if (checked.length === 0) { addLog('⚠ Selecione pelo menos um arquivo para marcar em lote.', 'warning'); return; }
       var rowNums = [];
-      checkedCheckboxes.forEach(function(cb) {
-        rowNums.push(parseInt(cb.dataset.rownum));
-      });
-
-      addLog('📥 Atualizando ' + rowNums.length + ' linha(s) na planilha...', 'info');
-      
+      checked.forEach(function(cb) { rowNums.push(parseInt(cb.dataset.rownum)); });
+      addLog('📥 Atualizando ' + rowNums.length + ' linha(s)...', 'info');
       google.script.run
-        .withSuccessHandler(function(msg) {
-          addLog('✅ ' + msg, 'success');
-          refreshTableData();
-        })
-        .withFailureHandler(function(err) {
-          addLog('❌ ' + err.message, 'error');
-        })
+        .withSuccessHandler(function(msg) { addLog('✅ ' + msg, 'success'); refreshTableData(); })
+        .withFailureHandler(function(err) { addLog('❌ ' + err.message, 'error'); })
         .updateRowsRepository(rowNums, value);
     }
 
@@ -1488,6 +1467,7 @@
       loadSettings();
       updateProviderUI();
       refreshTableData();
+      checkListingResume();
     });
   </script>
 

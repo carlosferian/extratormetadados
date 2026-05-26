@@ -130,3 +130,4 @@ function startListingSession(folderUrlOrId) {
 function startProcessingSession(forceReprocess = false, selectedRowNums = null) {
   return initProcessing(forceReprocess, selectedRowNums);
 }
+
