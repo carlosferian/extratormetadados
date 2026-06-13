@@ -208,7 +208,7 @@ function processingStep(settingsJson) {
         list[2] ? { text: '  🏷️ ' + list[2], type: 'normal' } : null,
         processNum ? { text: '  📎 Processo: ' + processNum, type: 'info' } : null
       ].filter(Boolean)
-    : [{ text: '⚠ Resposta inválida da IA: ' + shortName, type: 'warning' }];
+    : [{ text: '⚠ Resposta inválida da IA: ' + shortName + formatResponseSnippet(response), type: 'warning' }];
 
   return {
     done: false,
@@ -273,6 +273,20 @@ function extractListFromResponse(response) {
   }
 
   return [];
+}
+
+// Gera um trecho curto e seguro (HTML-escapado) da resposta crua da IA para exibir no log
+// quando extractListFromResponse() falha, ajudando a diagnosticar o que a IA retornou.
+function formatResponseSnippet(response, maxLen) {
+  if (!response) return '';
+  maxLen = maxLen || 120;
+
+  let cleaned = response.toString().replace(/\s+/g, ' ').trim();
+  if (!cleaned) return '';
+  if (cleaned.length > maxLen) cleaned = cleaned.substring(0, maxLen) + '...';
+
+  cleaned = cleaned.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return ' — Resposta: "' + cleaned + '"';
 }
 
 function cancelProcessing() {

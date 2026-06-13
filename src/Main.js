@@ -122,9 +122,9 @@ function hasImages() {
   return { hasImages: count > 0, count };
 }
 
-function startListingSession(folderUrlOrId) {
+function startListingSession(folderUrlOrId, fileTypeFilter) {
   const folderId = getFolderIdFromInput(folderUrlOrId);
-  return initListing(folderId);
+  return initListing(folderId, fileTypeFilter);
 }
 
 function startProcessingSession(forceReprocess = false, selectedRowNums = null) {

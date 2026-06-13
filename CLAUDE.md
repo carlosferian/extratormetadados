@@ -15,12 +15,17 @@ O Tribunal Regional Eleitoral do Paraná (TRE-PR) precisa catalogar documentos (
 ### O que está funcionando
 - **Sidebar completa** com accordion de configurações, log em tempo real e barra de progresso
 - **Listagem folder-by-folder** via CacheService (não bloqueia, processa uma pasta por chamada)
+- **Filtro por tipo de arquivo na listagem** (todos / imagens / PDFs / documentos de texto) — pastas sempre são percorridas, o filtro só decide o que é adicionado à planilha
+- **Preenchimento automático de `dc.date`** com a data de criação do arquivo no Drive durante a listagem, habilitando corretamente o fluxo de reprocessamento em `Process.js`
+- **Aviso de nomes de arquivo duplicados** ao final da listagem (evita `metadata.csv` inválido para o Archivematica)
 - **Processamento de IA por passos** — uma linha por chamada, com feedback visual a cada arquivo
 - **Múltiplos provedores de IA**: Gemini, OpenAI, OpenRouter, Ollama
+- **Retentativas automáticas com backoff** (`fetchWithRetry` em `ApiClient.js`) para erros transitórios de rede e HTTP (429/500/502/503/504) em todos os provedores
 - **Detecção de multimodalidade** com aviso quando modelo não suporta imagens
 - **Suporte a imagens, PDFs e texto** em todos os provedores que suportam
 - **Exportação metadata.csv** no padrão Archivematica (`filename` primeiro, paths com `objects/`)
-- **Log detalhado**: mostra `🔍 Analisando: arquivo.jpg...` antes da IA e `📌 Título / 📅 Evento / 🏷️ Tags` após
+- **Log detalhado**: mostra `🔍 Analisando: arquivo.jpg...` antes da IA e `📌 Título / 📅 Evento / 🏷️ Tags` após, com trecho da resposta crua da IA quando o formato não pode ser interpretado
+- **Usabilidade da sidebar**: mostrar/ocultar API keys, indicador de "alterações não salvas"/"salvo às HH:MM" nas configurações, destaque automático do log quando imagens são detectadas, e tooltip explicando Dublin Core/Archivematica
 
 ### O que ainda não está resolvido
 - **Deploy automático via GitHub Actions**: as credenciais OAuth nunca funcionaram corretamente. O workflow `.github/workflows/deploy.yml` existe, mas o deploy para o Apps Script falha com `unauthorized_client`. A causa provável é que a Apps Script API exige OAuth de usuário (não service account) e o refresh token gerado via OAuth Playground não está sendo aceito. **Alternativa**: fazer deploy manual colando o código direto no Apps Script até resolver.
@@ -144,15 +149,12 @@ As API keys são salvas em `PropertiesService.getUserProperties()` (por usuário
 
 - [ ] Resolver deploy automático via GitHub Actions (investigar alternativa com token pessoal do GitHub + clasp login via OIDC, ou usar `google-github-actions/auth` com Workload Identity)
 - [ ] Remover `src/Gemini.js` (obsoleto)
-- [ ] Adicionar campo `dc.date` preenchido automaticamente com a data de criação do arquivo (`file.getDateCreated()`)
 - [ ] Suporte a paginação na listagem para evitar timeout em pastas com muitos arquivos
-- [ ] Permitir reprocessar linhas já processadas (botão "Forçar reprocessamento")
 - [ ] Validação do formato do CSV antes de exportar (verificar se há linhas sem `filename`)
-- [ ] Campo de filtro por tipo de arquivo na listagem (ex: listar apenas imagens)
 - [ ] Exportar apenas as linhas selecionadas (coluna A = "SIM") no CSV
 
 ---
 
 ## Branch de desenvolvimento
 
-`claude/cool-wozniak-3iO70` — todos os commits foram feitos neste branch. Ainda não foi feito merge para `main`.
+`claude/metadata-extractor-usability-gwz685` — todos os commits foram feitos neste branch. Ainda não foi feito merge para `main`.

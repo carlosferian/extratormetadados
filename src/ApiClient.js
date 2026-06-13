@@ -1,3 +1,38 @@
+// Realiza UrlFetchApp.fetch com retentativas automáticas em erros transitórios
+// (códigos HTTP configuráveis e falhas de rede/timeout). Retorna a última
+// resposta obtida (sucesso ou falha); quem chama mantém a lógica de extração
+// de erro como já fazia.
+function fetchWithRetry(url, options, opts) {
+  opts = opts || {};
+  const retryStatusCodes = opts.retryStatusCodes || [429, 500, 502, 503, 504];
+  const maxRetries = opts.maxRetries || 3;
+  const delaysMs = opts.delaysMs || [2000, 4000, 8000];
+
+  const fetchOptions = Object.assign({}, options, { muteHttpExceptions: true });
+
+  let response;
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      response = UrlFetchApp.fetch(url, fetchOptions);
+    } catch (e) {
+      if (attempt < maxRetries - 1) {
+        Utilities.sleep(delaysMs[attempt] || delaysMs[delaysMs.length - 1]);
+        continue;
+      }
+      throw e;
+    }
+
+    const code = response.getResponseCode();
+    if (code === 200 || retryStatusCodes.indexOf(code) === -1) return response;
+
+    if (attempt < maxRetries - 1) {
+      Utilities.sleep(delaysMs[attempt] || delaysMs[delaysMs.length - 1]);
+    }
+  }
+
+  return response;
+}
+
 function isMultimodal(provider, model) {
   if (!model) return false;
   const m = model.toLowerCase();
@@ -141,8 +176,7 @@ function callAI(settings, prompt, fileId, mimeType) {
   return 'SKIP_LINE';
 }
 
-function callGemini(settings, prompt, file, mimeType, retries) {
-  if (retries === undefined) retries = 3;
+function callGemini(settings, prompt, file, mimeType) {
   const apiKey = settings.geminiApiKey;
   let model = settings.geminiModel || 'gemini-2.5-flash';
   // Intercept and auto-upgrade legacy models to gemini-2.5-flash
@@ -170,39 +204,22 @@ function callGemini(settings, prompt, file, mimeType, retries) {
 
   const payload = { contents: [{ parts }] };
 
-  for (let attempt = 0; attempt < retries; attempt++) {
-    const response = UrlFetchApp.fetch(url, {
-      method: 'post',
-      contentType: 'application/json',
-      payload: JSON.stringify(payload),
-      muteHttpExceptions: true
-    });
+  const response = fetchWithRetry(url, {
+    method: 'post',
+    contentType: 'application/json',
+    payload: JSON.stringify(payload)
+  }, { retryStatusCodes: [500], maxRetries: 3, delaysMs: [5000, 5000] });
 
-    const code = response.getResponseCode();
-    const body = response.getContentText();
+  const code = response.getResponseCode();
+  const body = response.getContentText();
 
-    if (code === 200) {
-      const json = JSON.parse(body);
-      return json.candidates[0].content.parts[0].text;
-    }
+  if (code === 200) {
+    const json = JSON.parse(body);
+    return json.candidates[0].content.parts[0].text;
+  }
 
-    if (code === 400) {
-      let errMsg = "Erro 400 (Bad Request) na API Gemini";
-      try {
-        const json = JSON.parse(body);
-        if (json.error && json.error.message) {
-          errMsg += ": " + json.error.message;
-        }
-      } catch (e) {}
-      throw new Error(errMsg);
-    }
-
-    if (code === 500 && attempt < retries - 1) {
-      Utilities.sleep(5000);
-      continue;
-    }
-
-    let errMsg = "Erro " + code + " na API Gemini";
+  if (code === 400) {
+    let errMsg = "Erro 400 (Bad Request) na API Gemini";
     try {
       const json = JSON.parse(body);
       if (json.error && json.error.message) {
@@ -212,7 +229,14 @@ function callGemini(settings, prompt, file, mimeType, retries) {
     throw new Error(errMsg);
   }
 
-  throw new Error("Falha na chamada da API Gemini após várias tentativas.");
+  let errMsg = "Erro " + code + " na API Gemini";
+  try {
+    const json = JSON.parse(body);
+    if (json.error && json.error.message) {
+      errMsg += ": " + json.error.message;
+    }
+  } catch (e) {}
+  throw new Error(errMsg);
 }
 
 function callOpenAI(settings, prompt, file, mimeType) {
@@ -243,12 +267,11 @@ function callOpenAI(settings, prompt, file, mimeType) {
 
   const payload = { model, messages, max_tokens: 1500, temperature: 0 };
 
-  const response = UrlFetchApp.fetch(url, {
+  const response = fetchWithRetry(url, {
     method: 'post',
     contentType: 'application/json',
     headers: { Authorization: 'Bearer ' + apiKey },
-    payload: JSON.stringify(payload),
-    muteHttpExceptions: true
+    payload: JSON.stringify(payload)
   });
 
   const code = response.getResponseCode();
@@ -297,7 +320,7 @@ function callOpenRouter(settings, prompt, file, mimeType) {
 
   const payload = { model, messages, max_tokens: 1500, temperature: 0 };
 
-  const response = UrlFetchApp.fetch(url, {
+  const response = fetchWithRetry(url, {
     method: 'post',
     contentType: 'application/json',
     headers: {
@@ -305,8 +328,7 @@ function callOpenRouter(settings, prompt, file, mimeType) {
       'HTTP-Referer': 'https://script.google.com',
       'X-Title': 'Extrator TRE-PR'
     },
-    payload: JSON.stringify(payload),
-    muteHttpExceptions: true
+    payload: JSON.stringify(payload)
   });
 
   const code = response.getResponseCode();
@@ -341,11 +363,10 @@ function callOllama(settings, prompt, file, mimeType) {
     payload.prompt = prompt + '\n\nConteúdo do arquivo:\n' + content.content;
   }
 
-  const response = UrlFetchApp.fetch(url, {
+  const response = fetchWithRetry(url, {
     method: 'post',
     contentType: 'application/json',
-    payload: JSON.stringify(payload),
-    muteHttpExceptions: true
+    payload: JSON.stringify(payload)
   });
 
   const code = response.getResponseCode();

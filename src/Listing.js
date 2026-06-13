@@ -1,4 +1,4 @@
-function initListing(folderId) {
+function initListing(folderId, fileTypeFilter) {
   let rootFolder;
   try {
     rootFolder = DriveApp.getFolderById(folderId);
@@ -40,7 +40,8 @@ function initListing(folderId) {
   const state = {
     folderQueue: [{ id: folderId, path: '' }],
     processedCount: 0,
-    folderCount: 0
+    folderCount: 0,
+    fileTypeFilter: fileTypeFilter || 'all'
   };
 
   CacheService.getUserCache().put('listingState', JSON.stringify(state), 21600);
@@ -73,7 +74,7 @@ function listingStep() {
     cache.remove('listingState');
     return {
       done: true,
-      message: '✅ Concluído: ' + state.processedCount + ' doc(s) em ' + state.folderCount + ' pasta(s)',
+      message: '✅ Concluído: ' + state.processedCount + ' doc(s) em ' + state.folderCount + ' pasta(s)' + checkDuplicateFilenames(),
       processedCount: state.processedCount,
       folderCount: state.folderCount
     };
@@ -129,15 +130,21 @@ function listingStep() {
     if (fileId === activeSpreadsheetId) continue;
     if (existingIds.has(fileId)) continue;
 
+    const mimeType = file.getMimeType();
+    if (!fileMatchesTypeFilter(mimeType, state.fileTypeFilter)) continue;
+
     let owner;
     try { owner = file.getOwner(); } catch (_) { owner = null; }
 
     const newRow = new Array(REQUIRED_HEADERS.length).fill('');
     newRow[COL.source] = file.getUrl();
     newRow[COL.creator] = owner ? owner.getName() : 'Desconhecido';
-    newRow[COL.format] = file.getMimeType();
+    newRow[COL.format] = mimeType;
     newRow[COL.identifier] = fileId;
     newRow[COL.filename] = folderPath ? folderPath + '/' + file.getName() : file.getName();
+    // Data de criação no Drive (não necessariamente a data do documento original),
+    // usada como valor inicial de dc.date para habilitar o fluxo de reprocessamento em Process.js
+    newRow[COL.date] = Utilities.formatDate(file.getDateCreated(), Session.getScriptTimeZone(), 'yyyy-MM-dd');
 
     sheet.getRange(sheet.getLastRow() + 1, 1, 1, newRow.length).setValues([newRow]);
     existingIds.add(fileId);
@@ -167,6 +174,48 @@ function cancelListing() {
   return 'Listagem cancelada.';
 }
 
-function resetCheckpoint() {
-  PropertiesService.getScriptProperties().deleteProperty('lastFileId');
+// Decide se um arquivo deve ser adicionado à planilha de acordo com o filtro de tipo
+// selecionado na listagem. Pastas são sempre percorridas, independente do filtro.
+function fileMatchesTypeFilter(mimeType, filter) {
+  if (!filter || filter === 'all') return true;
+  if (filter === 'images') return mimeType.startsWith('image/');
+  if (filter === 'pdf') return mimeType === 'application/pdf';
+  if (filter === 'documents') {
+    const docTypes = [
+      'text/plain', 'text/html', 'text/csv', 'text/xml',
+      'application/json', 'application/xml',
+      'application/vnd.google-apps.document',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.oasis.opendocument.text',
+      'application/rtf'
+    ];
+    return docTypes.indexOf(mimeType) !== -1 || mimeType.startsWith('text/');
+  }
+  return true;
+}
+
+// Verifica se há valores repetidos na coluna filename, que quebrariam o metadata.csv
+// (Archivematica exige um filename único por linha)
+function checkDuplicateFilenames() {
+  try {
+    const sheet = getActiveMetadataSheet();
+    const lastRow = sheet.getLastRow();
+    if (lastRow <= 1) return '';
+
+    const values = sheet.getRange(2, COL.filename + 1, lastRow - 1, 1).getValues();
+    const counts = new Map();
+    values.forEach(row => {
+      const fname = (row[0] || '').toString().trim();
+      if (!fname) return;
+      counts.set(fname, (counts.get(fname) || 0) + 1);
+    });
+
+    let duplicateNames = 0;
+    counts.forEach(c => { if (c > 1) duplicateNames++; });
+
+    return duplicateNames > 0 ? ' ⚠ ' + duplicateNames + ' nome(s) de arquivo duplicado(s) detectado(s).' : '';
+  } catch (e) {
+    return '';
+  }
 }

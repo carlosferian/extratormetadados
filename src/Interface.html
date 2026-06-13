@@ -182,6 +182,39 @@
     .btn-save   { background: #fff; color: #2563eb; border: 1px solid #bfdbfe; font-size: 12.5px; padding: 6px 12px; margin-top: 10px; }
     .btn-save:hover:not(:disabled) { background: #eff6ff; }
 
+    .save-status {
+      font-size: 11.5px;
+      margin-top: 6px;
+      min-height: 14px;
+      font-weight: 600;
+      text-transform: none;
+    }
+    .save-status.saved { color: #10b981; }
+    .save-status.unsaved { color: #f59e0b; }
+
+    .input-with-toggle {
+      position: relative;
+    }
+    .input-with-toggle input {
+      padding-right: 36px;
+    }
+    .toggle-visibility-btn {
+      position: absolute;
+      right: 4px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 28px;
+      height: 28px;
+      padding: 0;
+      background: none;
+      border: none;
+      box-shadow: none;
+      font-size: 14px;
+      color: #64748b;
+    }
+    .toggle-visibility-btn:hover:not(:disabled) { filter: none; transform: translateY(-50%); color: #2563eb; }
+    .toggle-visibility-btn:active:not(:disabled) { transform: translateY(-50%); }
+
     .divider {
       border: none;
       border-top: 1px solid #e2e8f0;
@@ -376,6 +409,11 @@
       transition: background 0.2s;
     }
     .log-accordion-header:hover { background: #e2e8f0; }
+    .log-accordion-header.flash { animation: flashWarning 1s ease-in-out 3; }
+    @keyframes flashWarning {
+      0%, 100% { background: #f1f5f9; }
+      50% { background: #fef3c7; }
+    }
     .log-accordion-title {
       font-size: 11px;
       font-weight: 700;
@@ -473,6 +511,50 @@
       color: #1e293b;
       margin-bottom: 2px;
       letter-spacing: -0.25px;
+    }
+
+    .info-tooltip {
+      position: relative;
+      display: inline-block;
+      margin-left: 6px;
+      cursor: pointer;
+      vertical-align: middle;
+    }
+    .info-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #e0e7ff;
+      color: #3730a3;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .info-tooltip-content {
+      display: none;
+      position: absolute;
+      top: 24px;
+      left: 0;
+      z-index: 50;
+      width: 260px;
+      max-width: min(260px, 85vw);
+      background: #1e293b;
+      color: #f1f5f9;
+      font-size: 12px;
+      font-weight: 400;
+      letter-spacing: normal;
+      line-height: 1.5;
+      text-transform: none;
+      padding: 10px 12px;
+      border-radius: 6px;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2);
+    }
+    .info-tooltip:hover .info-tooltip-content,
+    .info-tooltip:focus .info-tooltip-content,
+    .info-tooltip.active .info-tooltip-content {
+      display: block;
     }
 
     .table-header p {
@@ -685,6 +767,17 @@
         <input type="text" id="folderUrl" placeholder="Link ou ID da pasta do Google Drive">
         <p class="hint">A planilha "metadata" será aberta ou criada nesta pasta para gerenciar os documentos.</p>
         <button class="use-current" onclick="useCurrentFolder()">&#8592; Usar pasta desta planilha</button>
+
+        <div class="field" style="margin-top: 12px;">
+          <label>Tipo de arquivo</label>
+          <select id="fileTypeFilter">
+            <option value="all" selected>Todos os arquivos</option>
+            <option value="images">Apenas imagens</option>
+            <option value="pdf">Apenas PDFs</option>
+            <option value="documents">Apenas documentos de texto</option>
+          </select>
+          <p class="hint">Filtra quais arquivos serão adicionados à planilha durante a listagem. Pastas são sempre percorridas, independente do filtro.</p>
+        </div>
       </div>
 
       <!-- Configurações (accordion) -->
@@ -707,7 +800,10 @@
         <div id="config-gemini" class="provider-config">
           <div class="field">
             <label>Gemini API Key</label>
-            <input type="password" id="geminiApiKey" placeholder="Cole sua Gemini API key aqui">
+            <div class="input-with-toggle">
+              <input type="password" id="geminiApiKey" placeholder="Cole sua Gemini API key aqui">
+              <button type="button" class="toggle-visibility-btn" onclick="togglePasswordVisibility('geminiApiKey', this)" aria-label="Mostrar chave">&#128065;&#65039;</button>
+            </div>
           </div>
           <div class="field">
             <label>Modelo Gemini</label>
@@ -720,7 +816,10 @@
         <div id="config-openai" class="provider-config" style="display:none">
           <div class="field">
             <label>OpenAI API Key</label>
-            <input type="password" id="openaiApiKey" placeholder="Cole sua OpenAI API key aqui">
+            <div class="input-with-toggle">
+              <input type="password" id="openaiApiKey" placeholder="Cole sua OpenAI API key aqui">
+              <button type="button" class="toggle-visibility-btn" onclick="togglePasswordVisibility('openaiApiKey', this)" aria-label="Mostrar chave">&#128065;&#65039;</button>
+            </div>
           </div>
           <div class="field">
             <label>Modelo OpenAI</label>
@@ -733,7 +832,10 @@
         <div id="config-openrouter" class="provider-config" style="display:none">
           <div class="field">
             <label>OpenRouter API Key</label>
-            <input type="password" id="openrouterApiKey" placeholder="Cole sua OpenRouter API key aqui">
+            <div class="input-with-toggle">
+              <input type="password" id="openrouterApiKey" placeholder="Cole sua OpenRouter API key aqui">
+              <button type="button" class="toggle-visibility-btn" onclick="togglePasswordVisibility('openrouterApiKey', this)" aria-label="Mostrar chave">&#128065;&#65039;</button>
+            </div>
           </div>
           <div class="field">
             <label>Modelo OpenRouter</label>
@@ -756,6 +858,7 @@
         </div>
 
         <button class="btn-save" style="margin-top: 12px;" onclick="saveSettingsUI()">Salvar configurações</button>
+        <div class="save-status" id="saveStatus"></div>
       </div>
 
       <!-- Active File Card (Reativo) -->
@@ -833,7 +936,7 @@
       </div>
 
       <!-- Log Accordion (Colapsável) -->
-      <div class="log-accordion-header" onclick="toggleLogAccordion()">
+      <div class="log-accordion-header" id="logAccordionHeader" onclick="toggleLogAccordion()">
         <span class="log-accordion-title">📟 Detalhes e Logs Técnicos</span>
         <span class="log-chevron" id="logChevron">&#9660;</span>
       </div>
@@ -847,7 +950,15 @@
     <div class="right-panel">
       <div class="table-card">
         <div class="table-header">
-          <h3>📋 Projeção da Planilha de Metadados</h3>
+          <h3>📋 Projeção da Planilha de Metadados
+            <span class="info-tooltip" tabindex="0">
+              <span class="info-icon">&#9432;</span>
+              <span class="info-tooltip-content">
+                <strong>Dublin Core</strong> é um padrão internacional de metadados (informações sobre os documentos, como título, autor e data) usado para organizar e descrever arquivos digitais.<br><br>
+                <strong>Archivematica</strong> é o sistema usado pelo TRE-PR para preservar digitalmente esses documentos a longo prazo, garantindo que possam ser acessados no futuro.
+              </span>
+            </span>
+          </h3>
           <p>Visualize as linhas atuais da planilha de metadados, busque por arquivo e selecione linhas específicas para descrever ou atualizar.</p>
         </div>
 
@@ -902,6 +1013,19 @@
       ollama: 'Multimodal: llava, bakllava, moondream.<br>Ex: llava, moondream'
     };
 
+    function togglePasswordVisibility(inputId, btnEl) {
+      var input = document.getElementById(inputId);
+      if (input.type === 'password') {
+        input.type = 'text';
+        btnEl.innerHTML = '&#128584;';
+        btnEl.setAttribute('aria-label', 'Ocultar chave');
+      } else {
+        input.type = 'password';
+        btnEl.innerHTML = '&#128065;&#65039;';
+        btnEl.setAttribute('aria-label', 'Mostrar chave');
+      }
+    }
+
     function toggleAccordion() {
       var body = document.getElementById('accordionBody');
       var chevron = document.getElementById('chevron');
@@ -921,6 +1045,23 @@
         chevron.classList.add('open');
       } else {
         chevron.classList.remove('open');
+      }
+    }
+
+    // Destaca o accordion de logs e o expande automaticamente, para que avisos
+    // importantes (ex: imagens detectadas) não passem despercebidos quando colapsado
+    function flashLogAccordion() {
+      var header = document.getElementById('logAccordionHeader');
+      header.classList.remove('flash');
+      void header.offsetWidth; // força reflow para reiniciar a animação
+      header.classList.add('flash');
+      setTimeout(function() {
+        header.classList.remove('flash');
+      }, 3000);
+
+      var body = document.getElementById('logAccordionBody');
+      if (!body.classList.contains('open')) {
+        toggleLogAccordion();
       }
     }
 
@@ -971,11 +1112,43 @@
       google.script.run
         .withSuccessHandler(function(msg) {
           addLog('✅ ' + msg, 'success');
+          markSettingsSaved();
         })
         .withFailureHandler(function(err) {
           addLog('❌ Erro ao salvar: ' + err.message, 'error');
         })
         .saveSettings(settings);
+    }
+
+    function markSettingsDirty() {
+      var el = document.getElementById('saveStatus');
+      el.textContent = '● Alterações não salvas';
+      el.className = 'save-status unsaved';
+    }
+
+    function markSettingsSaved() {
+      var now = new Date();
+      var hh = String(now.getHours()).padStart(2, '0');
+      var mm = String(now.getMinutes()).padStart(2, '0');
+      var el = document.getElementById('saveStatus');
+      el.textContent = '✓ Salvo às ' + hh + ':' + mm;
+      el.className = 'save-status saved';
+    }
+
+    function attachSettingsChangeListeners() {
+      var fields = [
+        'provider', 'geminiApiKey', 'geminiModel',
+        'openaiApiKey', 'openaiModel',
+        'openrouterApiKey', 'openrouterModel',
+        'ollamaUrl', 'ollamaModel'
+      ];
+      fields.forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) {
+          el.addEventListener('input', markSettingsDirty);
+          el.addEventListener('change', markSettingsDirty);
+        }
+      });
     }
 
     function collectSettings() {
@@ -1048,6 +1221,7 @@
 
     function startListing() {
       var url = document.getElementById('folderUrl').value.trim();
+      var fileTypeFilter = document.getElementById('fileTypeFilter').value;
       if (!url) {
         addLog('❌ Cole o link ou ID da pasta do Google Drive.', 'error');
         return;
@@ -1081,7 +1255,7 @@
           appState = 'idle';
           document.getElementById('activeCard').style.display = 'none';
         })
-        .startListingSession(url);
+        .startListingSession(url, fileTypeFilter);
     }
 
     function nextListingStep() {
@@ -1140,13 +1314,8 @@
       google.script.run
         .withSuccessHandler(function(imgInfo) {
           if (imgInfo.hasImages) {
-            var provider = settings.provider || 'gemini';
-            var model = settings.model || '';
-            if (typeof isMultimodalClient === 'function' && !isMultimodalClient(provider, model)) {
-              addLog('⚠ ' + imgInfo.count + ' imagem(ns) detectada(s). O modelo atual pode não suportá-las, mas o processamento continuará.', 'warning');
-            } else {
-              addLog('⚠ ' + imgInfo.count + ' imagem(ns) detectada(s) na planilha.', 'warning');
-            }
+            addLog('⚠ ' + imgInfo.count + ' imagem(ns) detectada(s) na planilha.', 'warning');
+            flashLogAccordion();
           }
 
           google.script.run
@@ -1514,6 +1683,20 @@
       loadSettings();
       updateProviderUI();
       refreshTableData();
+      attachSettingsChangeListeners();
+
+      // Permite alternar o tooltip do Dublin Core com toque/clique (além de hover/foco)
+      document.querySelectorAll('.info-tooltip').forEach(function(el) {
+        el.addEventListener('click', function(e) {
+          e.stopPropagation();
+          el.classList.toggle('active');
+        });
+      });
+      document.addEventListener('click', function() {
+        document.querySelectorAll('.info-tooltip.active').forEach(function(el) {
+          el.classList.remove('active');
+        });
+      });
     });
   </script>
 
